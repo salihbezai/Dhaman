@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { loginUser } from "./authActions";
 
 interface User {
   id: string;
@@ -10,29 +11,39 @@ interface User {
 interface AuthState {
   user: User | null;
   loading: boolean;
+  error: string | null;
 }
 
 const initialState: AuthState = {
   user: null,
   loading: false,
+  error: null,
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    loginStart: (state) => {
-      state.loading = true;
-    },
-    loginSuccess: (state, action: PayloadAction<User>) => {
-      state.user = action.payload;
-      state.loading = false;
-    },
-    logout: (state) => {
-      state.user = null;
-    },
+    clearError(state) {
+      state.error = null;
+    }
+  },
+  extraReducers: (builder) => {
+      builder
+      .addCase(loginUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.loading = false;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
   },
 });
 
-export const { loginStart, loginSuccess, logout } = authSlice.actions;
+export const {clearError } = authSlice.actions;
 export default authSlice.reducer;
