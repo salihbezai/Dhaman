@@ -1,25 +1,24 @@
 import { View, TextInput, Pressable, Text, ScrollView } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
+// import { useDispatch, useSelector } from "react-redux";
 import Logo from "@/components/Logo";
 import { User, Lock, LogIn } from "lucide-react-native"; // icons
 import { useState } from "react";
-import { LoginPayload, loginUser } from "@/src/features/auth/authActions";
-import { RootState } from "@/src/app/store";
+// import { LoginPayload, loginUser } from "@/src/features/auth/authActions";
+// import { RootState } from "@/src/app/store";
 import { useRouter } from "expo-router/build/exports";
 
-export default function LoginScreen() {
-  const dispatch = useDispatch();
+export default function Login() {
+//   const dispatch = useDispatch();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const { error, loading } = useSelector((state: RootState) => state.auth);
+//   const { error, loading } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
 
   const handleLogin = () => {
     console.log("Login pressed", username, password);
     // Example dispatch (uncomment when backend ready)
     // dispatch(loginUser({ username, password }) as LoginPayload);
-    // router.push("/admin/home"); // Navigate to admin home for testing
   };
 
   return (
@@ -43,11 +42,11 @@ export default function LoginScreen() {
         {/* Form */}
         <View className="space-y-5">
           {/* show popup if error  */}
-          {error && (
+          {/* {error && (
             <View className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
               <Text className="text-sm">{error}</Text>
             </View>
-          )}
+          )} */}
           {/* Username */}
           <View className="mt-4">
             <Text className="text-[10px] font-black text-black-400 mr-2 uppercase tracking-wider">
@@ -102,13 +101,11 @@ export default function LoginScreen() {
           {/* Login Button */}
           <View className="mt-6">
             <Pressable
-              onPress={handleLogin}
-              disabled={loading}
               className="w-full bg-[#1e293b] py-4 rounded-xl flex flex-row items-center justify-center gap-2 shadow-lg active:scale-95"
             >
               <LogIn size={16} color="white" />
               <Text className="text-white font-black text-xs">
-                {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+                {"تسجيل الدخول"}
               </Text>
             </Pressable>
           </View>
