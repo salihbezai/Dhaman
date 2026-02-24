@@ -1,5 +1,5 @@
 import { View, TextInput, Pressable, Text, ScrollView } from "react-native";
-// import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Logo from "@/components/Logo";
 import { User, Lock, LogIn } from "lucide-react-native"; // icons
 import { useState } from "react";
@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useRouter } from "expo-router/build/exports";
 
 export default function Login() {
-//   const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -101,6 +101,7 @@ export default function Login() {
           {/* Login Button */}
           <View className="mt-6">
             <Pressable
+              onPress={handleLogin}
               className="w-full bg-[#1e293b] py-4 rounded-xl flex flex-row items-center justify-center gap-2 shadow-lg active:scale-95"
             >
               <LogIn size={16} color="white" />
