@@ -7,11 +7,12 @@ export enum UserRole {
 }
 
 interface IUser extends Document {
-  name: string;
+  username: string;
   email: string;
   password?: string;
   phone: string;
   role: UserRole;
+  profileImageUrl?: string;
   refreshTokens: { token: string; createdAt: Date; expiresAt: Date }[];
   currentLocation?: {
     latitude: number;
@@ -23,11 +24,12 @@ interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
-    name: { type: String, required: true },
+    username: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     phone: { type: String, required: true },
     role: { type: String, enum: Object.values(UserRole), required: true },
+    profileImageUrl: { type: String },
     refreshTokens: [
       {
         token: String,
