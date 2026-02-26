@@ -1,35 +1,37 @@
-import { Text, View, StyleSheet } from 'react-native';
- import { Link } from 'expo-router'; 
-import { useSelector } from 'react-redux';
-import { RootState } from '@/src/store/store';
-import * as SecureStore from 'expo-secure-store';
+import React from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/src/store/store";
+import { View, ActivityIndicator, Text } from "react-native";
 
-export default function Index() {
-  const { user } = useSelector((state: RootState) => state.auth);
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Home screen</Text>
-      <Link href="/login" style={styles.button}>
-        Go to Login screen
-        Hello, {user?.username}
-      </Link>
-    </View>
-  );
+// Import your dashboard components
+import SupervisorDashboard from "../../components/dashboards/SupervisorDashboard";
+import DriverDashboard from "../../components/dashboards/DriverDashboard";
+import ConfirmerDashboard from "@/components/dashboards/ConfirmerDashboard";
+
+export default function TabIndex() {
+  const { user, loading } = useSelector((state: RootState) => state.auth);
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-slate-50">
+        <ActivityIndicator size="large" color="#0f172a" />
+      </View>
+    );
+  }
+
+  // Role-based logic
+  switch (user?.role) {
+    case "SUPERVISOR":
+      return <SupervisorDashboard />;
+    case "DRIVER":
+      return <DriverDashboard />;
+    case "CONFIRMER":
+      return <ConfirmerDashboard />;
+    default:
+      return (
+        <View className="flex-1 justify-center items-center">
+          <Text>خطأ: لم يتم التعرف على الرتبة</Text>
+        </View>
+      );
+  }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#25292e',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {
-    color: '#fff',
-  },
-  button: {
-    fontSize: 20,
-    textDecorationLine: 'underline',
-    color: '#fff',
-  },
-});

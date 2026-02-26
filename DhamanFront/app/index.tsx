@@ -8,7 +8,7 @@ import api from "@/src/api/axios";
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
-  const [hasToken, setHasToken] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -17,35 +17,30 @@ export default function Index() {
         const token = await SecureStore.getItemAsync("accessToken");
 
         if (token) {
-          // 1. If we have a token, try to fetch the latest profile to re-hydrate Redux
-          // This ensures state.auth.user is populated throughout the app
           const { data } = await api.get("/auth/me");
+          
           dispatch(
             setCredentials({
-              user: data.user,
+              user: data.user, // This includes data.user.role
               token: token,
             }),
           );
 
-          setHasToken(true);
+          setUserRole(data.user.role);
         }
       } catch (error: any) {
-        // ONLY clear tokens if the error is specifically "Unauthorized" (401/403)
-        // If it's a 500 or a Network Error, don't kick the user out!
         if (error.response?.status === 401 || error.response?.status === 403) {
           await SecureStore.deleteItemAsync("accessToken");
-          await SecureStore.deleteItemAsync("refreshToken");
-          setHasToken(false);
+          setUserRole(null);
         } else {
-          // If it's a network error, we can't verify, but we can
-          // either trust the local token or show an error screen.
-          // For now, let's let them through if the token exists locally:
-          setHasToken(true);
+          // If network error, you might want to try reading from a local 
+          // 'user' object if you saved one in SecureStore previously
+          setUserRole(null); 
         }
       } finally {
         setIsLoading(false);
       }
-    }
+    };
 
     checkSession();
   }, [dispatch]);
@@ -53,14 +48,17 @@ export default function Index() {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#1e293b" />
+        <ActivityIndicator size="large" color="#0f172a" />
       </View>
     );
   }
-  // If we have a token and user data, go to Tabs. Otherwise, go to Login.
-  return hasToken ? (
-    <Redirect href="/(tabs)" />
-  ) : (
-    <Redirect href="/(auth)/login" />
-  );
+
+
+  if (!userRole) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+
+
+  return <Redirect href="/(tabs)" />;
 }

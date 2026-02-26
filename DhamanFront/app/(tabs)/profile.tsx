@@ -26,7 +26,7 @@ export default function ProfileScreen() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    dispatch(logoutUser());
+    await dispatch(logoutUser());
     // clear tokens and state
     dispatch(logout());
     router.replace("/(auth)/login");

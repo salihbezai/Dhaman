@@ -46,19 +46,23 @@ export const register = async (req: Request, res: Response) => {
 
   // validate required fields
   if (!username || !email || !password || !phone || !role) {
-    return res
-      .status(400)
-      .json({
-        message: "Username, email, phone, role, and password are required.",
-      });
+    return res.status(400).json({
+      message: {
+        en: "All fields (username, email, password, phone, role) are required.",
+        ar: "جميع الحقول (اسم المستخدم، البريد الإلكتروني، كلمة المرور، رقم الهاتف، الصلاحية) مطلوبة.",
+      },
+    });
   }
   try {
     // check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res
-        .status(400)
-        .json({ message: "User with this email already exists." });
+      return res.status(400).json({
+        message: {
+          en: "User with this email already exists.",
+          ar: "المستخدم مع هذا البريد الإلكتروني موجود بالفعل.",
+        },
+      });
     }
 
     // hash password
@@ -111,7 +115,14 @@ export const register = async (req: Request, res: Response) => {
       stack: err.stack,
       route: req.originalUrl,
     });
-    res.status(500).json({ message: "Server error during registration." });
+    res
+      .status(500)
+      .json({
+        message: {
+          en: "Server error during registration.",
+          ar: "خطأ في الخادم أثناء التسجيل.",
+        },
+      });
   }
 };
 
@@ -132,15 +143,15 @@ interface LoginResponse {
 
 export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body as LoginRequestBody;
-    console.log("trying to login with " + JSON.stringify(req.body));
+  console.log("trying to login with " + JSON.stringify(req.body));
   // validate required fields
   if (!username || !password) {
-    return res
-      .status(400)
-    .json({ message:{
+    return res.status(400).json({
+      message: {
         en: "Username and password are required.",
-        ar: "اسم المستخدم وكلمة المرور مطلوبان."
-    }})
+        ar: "اسم المستخدم وكلمة المرور مطلوبان.",
+      },
+    });
   }
   try {
     // find user by username
@@ -148,9 +159,9 @@ export const login = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(400).json({
         message: {
-            en: "Invalid username or password.",
-            ar: "خطأ في اسم المستخدم أو كلمة المرور."
-        }
+          en: "Invalid username or password.",
+          ar: "خطأ في اسم المستخدم أو كلمة المرور.",
+        },
       });
     }
 
@@ -158,7 +169,12 @@ export const login = async (req: Request, res: Response) => {
     const isMatch = await bcrypt.compare(password, user.password!);
 
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid username or password." });
+      return res.status(401).json({
+        message: {
+          en: "Invalid username or password.",
+          ar: "خطأ في اسم المستخدم أو كلمة المرور.",
+        },
+      });
     }
     const accessToken = generateAccessToken(user._id.toString(), user.role);
     const refreshToken = generateRefreshToken(user._id.toString());
@@ -193,20 +209,28 @@ export const login = async (req: Request, res: Response) => {
       stack: (error as Error).stack,
       route: req.originalUrl,
     });
-    res.status(500).json({ message: "Server error during login." });
+    res.status(500).json({
+      message: {
+        en: "Server error during login.",
+        ar: "خطأ في الخادم أثناء تسجيل الدخول.",
+      },
+    });
   }
 };
 
 export const refresh = async (req: Request, res: Response) => {
   try {
-    console.log("called")
+    console.log("called");
     const GRACE_MS = 30 * 1000; // 30 seconds grace
     const REFRESH_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
     const oldToken = req.body.token;
     if (!oldToken) {
       return res.status(401).json({
-        message: "You are not logged in, please log in and try again.",
+        message: {
+          en: "You are not logged in, please log in and try again.",
+          ar: "أنت غير مسجل دخولك، يرجى تسجيل الدخول والمحاولة مرة أخرى.",
+        },
       });
     }
 
@@ -216,7 +240,10 @@ export const refresh = async (req: Request, res: Response) => {
       payload = jwt.verify(oldToken, JWT_SECRET) as JWTPayload;
     } catch {
       return res.status(401).json({
-        message: "You are not logged in, please log in and try again.",
+        message: {
+          en: "You are not logged in, please log in and try again.",
+          ar: "أنت غير مسجل دخولك، يرجى تسجيل الدخول والمحاولة مرة أخرى.",
+        },
       });
     }
 
@@ -228,7 +255,10 @@ export const refresh = async (req: Request, res: Response) => {
 
     if (!user) {
       return res.status(401).json({
-        message: "You are not logged in, please log in and try again.",
+        message: {
+          en: "You are not logged in, please log in and try again.",
+          ar: "أنت غير مسجل دخولك، يرجى تسجيل الدخول والمحاولة مرة أخرى.",
+        },
       });
     }
     //  Validate token & grace period
@@ -241,7 +271,12 @@ export const refresh = async (req: Request, res: Response) => {
       //  Token has expired or reused
       user.refreshTokens = [];
       await user.save();
-      return res.status(403).json({ message: "Unauthorized" });
+      return res.status(403).json({
+        message: {
+          en: "Unauthorized",
+          ar: "دخول غير مصرح به",
+        },
+      });
     }
 
     //  Rotate token
@@ -295,7 +330,9 @@ export const refresh = async (req: Request, res: Response) => {
       stack: (error as Error).stack,
       route: req.originalUrl,
     });
-    res.status(500).json({ message: "Server error during refresh." });
+    res
+      .status(500)
+      .json({ message: { en: "Server error", ar: "خطاء في الخادم" } });
   }
 };
 
@@ -305,7 +342,9 @@ export const getUserProfile = async (req: Request, res: Response) => {
     const userId = req.user?.id;
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json({
+        message: { en: "User not found.", ar: "المستخدم غير موجود." },
+      });
     }
     res.status(200).json({
       user: {
@@ -324,7 +363,12 @@ export const getUserProfile = async (req: Request, res: Response) => {
       stack: (error as Error).stack,
       route: req.originalUrl,
     });
-    res.status(500).json({ message: "Server error getting user profile." });
+    res.status(500).json({
+      message: {
+        en: "Server error getting user profile.",
+        ar: "خطاء في الخادم أثناء جلب بيانات المستخدم.",
+      },
+    });
   }
 };
 
@@ -339,7 +383,9 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     });
     console.log("the udpate data " + JSON.stringify(updateData));
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json({
+        message: { en: "User not found.", ar: "المستخدم غير موجود." },
+      });
     }
     res.status(200).json({
       user: {
@@ -358,13 +404,18 @@ export const updateUserProfile = async (req: Request, res: Response) => {
       stack: (error as Error).stack,
       route: req.originalUrl,
     });
-    res.status(500).json({ message: "Server error updating user profile." });
+    res.status(500).json({
+      message: {
+        en: "Server error updating user profile.",
+        ar: "خطاء في الخادم أثناء تحديث بيانات المستخدم.",
+      },
+    });
   }
 };
 
 // logout user
 export const logout = async (req: Request, res: Response) => {
-  const token = req.body.token
+  const token = req.body.token;
   // find the user by token
   if (token) {
     const user = await User.findOne({
@@ -379,6 +430,8 @@ export const logout = async (req: Request, res: Response) => {
       await user.save();
     }
     res.clearCookie("refreshToken");
-    res.status(200).json({ message: "Logout successful." });
+    res.status(200).json({
+      message: { en: "Logout successful.", ar: "تم تسجيل الخروج بنجاح." },
+    });
   }
 };
