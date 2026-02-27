@@ -16,18 +16,23 @@ interface IOrder extends Document {
   customerPhone: string;
   address: string;
   wilaya: string;
-  items: Array<{ product: string; quantity: number; price: number }>;
+  // Refined items to link to Product model
+  items: Array<{ 
+    product: Types.ObjectId; // Reference to Product
+    productName: string;     // Denormalized for quick display
+    quantity: number; 
+    priceAtTimeOfOrder: number; 
+  }>;
   totalAmount: number;
+  deliveryPrice: number;
   status: OrderStatus;
   
-  // Actor References
   confirmerId?: Types.ObjectId;
   driverId?: Types.ObjectId;
 
-  // Tracking details
-  callAttempts: number; // For the "3 calls auto-cancel" logic
+  callAttempts: number; 
   postponedDate?: Date;
-  deliveryNotificationSent: boolean; // When driver arrives
+  deliveryNotificationSent: boolean; 
   paymentReceived: number;
   
   history: Array<{
@@ -44,11 +49,13 @@ const orderSchema = new Schema<IOrder>({
   address: { type: String, required: true },
   wilaya: { type: String, required: true },
   items: [{
-    product: String,
-    quantity: Number,
-    price: Number
+    product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    productName: String, // Storing name directly helps if product is deleted later
+    quantity: { type: Number, default: 1 },
+    priceAtTimeOfOrder: { type: Number, required: true }
   }],
   totalAmount: { type: Number, required: true },
+  deliveryPrice: { type: Number, default: 0 },
   status: { 
     type: String, 
     enum: Object.values(OrderStatus), 

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { User, UserRole } from '../models/User';
 import { Order, OrderStatus } from '../models/Order';
 import bcrypt from "bcrypt";
+import { Product } from '../models/Product';
 
 export const getTeam = async (req: Request, res: Response) => {
     console.log("trying to get teams")
@@ -30,4 +31,17 @@ export const getAllOrders = async (req: Request, res: Response) => {
 };
 
 
+
+
+// product
+
+export const createProduct = async (req: Request, res: Response) => {
+  try {
+    const { name, sku, basePrice, stockQuantity } = req.body;
+    const product = await Product.create({ name, sku, basePrice, stockQuantity });
+    res.status(201).json(product);
+  } catch (err) {
+    res.status(400).json({ message: "Product creation failed" });
+  }
+};
 
