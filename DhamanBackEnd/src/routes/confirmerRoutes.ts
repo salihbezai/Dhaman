@@ -4,16 +4,21 @@ import {
   getConfirmerOrders, 
   createOrder, 
   handleNoAnswer, 
-  confirmOrder, 
+  confirmOrder,
+  handleCancelOrder,
+  handlePostponeOrder, 
 } from '../controllers/confirmerController';
 
 const router = Router();
 
 
 router.get('/orders',protect, confirmerOnly,getConfirmerOrders);
-router.post('/orders',protect, confirmerOnly,createOrder);
-router.patch('/orders/:id/no-answer',protect, confirmerOnly,handleNoAnswer);
-router.patch('/orders/:id/confirm', protect, confirmerOnly, confirmOrder);
+router.post('/orders',createOrder);
+router.put('/orders/:id/no-answer',protect, confirmerOnly,handleNoAnswer);
+router.put('/orders/:id/confirm', protect, confirmerOnly, confirmOrder);
+router.put('/orders/:id/cancel', protect, confirmerOnly, handleCancelOrder);
+router.put('/orders/:id/postpone', protect, confirmerOnly, handlePostponeOrder);
+
 
 
 export default router;
