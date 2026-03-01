@@ -6,7 +6,8 @@ import {
   handleNoAnswer, 
   confirmOrder,
   handleCancelOrder,
-  handlePostponeOrder, 
+  handlePostponeOrder,
+  updateOrder, 
 } from '../controllers/confirmerController';
 
 const router = Router();
@@ -14,6 +15,7 @@ const router = Router();
 
 router.get('/orders',protect, confirmerOnly,getConfirmerOrders);
 router.post('/orders',createOrder);
+router.put('/orders/:id',updateOrder);
 router.put('/orders/:id/no-answer',protect, confirmerOnly,handleNoAnswer);
 router.put('/orders/:id/confirm', protect, confirmerOnly, confirmOrder);
 router.put('/orders/:id/cancel', protect, confirmerOnly, handleCancelOrder);

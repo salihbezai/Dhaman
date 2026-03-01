@@ -88,3 +88,18 @@ export const handleNoAnswerOrder = createAsyncThunk<
     return rejectWithValue(getErrorMessage(error));
   }
 });
+
+
+// update order 
+export const updateOrderByConfirmer = createAsyncThunk<
+  Order,
+  {  formData: any },
+  { rejectValue: string }
+>("orders/updateOrderByConfirmer", async ({ formData }, { rejectWithValue }) => {
+  try {
+    const { data } = await api.put(`/confirmer/orders/${formData._id}`, formData);
+    return data.order;
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error));
+  }
+})

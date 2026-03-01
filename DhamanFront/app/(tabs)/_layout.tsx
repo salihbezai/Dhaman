@@ -7,6 +7,7 @@ export default function TabLayout() {
   return (
     <Tabs
    screenOptions={{
+    headerTitleAlign: 'center',
     headerStyle: { backgroundColor: '#1e293b' },
     headerTintColor: '#fff',
     tabBarActiveTintColor: '#1e293b',
@@ -17,30 +18,33 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'الرئيسية',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
           ),
         }}
       />
-      <Tabs.Screen
-        name="about"
-        options={{
-          title: 'About',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'information-circle' : 'information-circle-outline'} color={color} size={24}/>
-          ),
-        }}
-      />
+   
        <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'الملف الشخصي',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person-sharp' : 'person-outline'} color={color} size={24} />
           ),
         }}
       /> 
+
+
+         <Tabs.Screen
+        name="about"
+        options={{
+          title: 'حول',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'information-circle' : 'information-circle-outline'} color={color} size={24}/>
+          ),
+        }}
+      />
     </Tabs>
    
   );

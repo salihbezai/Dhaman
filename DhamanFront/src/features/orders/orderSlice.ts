@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getConfirmerOrders, handleCancelOrder, handleConfirmTheOrder, handleNoAnswerOrder, handlePostponeOrder } from "./orderActions";
+import { getConfirmerOrders, handleCancelOrder, handleConfirmTheOrder, handleNoAnswerOrder, handlePostponeOrder, updateOrderByConfirmer } from "./orderActions";
 
 export interface Order {
     _id: string;
@@ -149,6 +149,24 @@ const orderSlice = createSlice({
         }
       })
       .addCase(handlePostponeOrder.rejected, (state, action) => {
+        state.loadingStatusOrder = false;
+        state.error = action.payload ?? "خطاء في تاكيد الطلب";
+      })
+      .addCase(updateOrderByConfirmer.pending, (state) => {
+        state.loadingStatusOrder = true;
+        state.error = null;
+      })
+      .addCase(updateOrderByConfirmer.fulfilled, (state, action) => {
+        state.loadingStatusOrder = false;
+        state.error = null;
+        const updatedOrderIndex = state.orders.findIndex(
+          (order) => order._id === action.payload._id,
+        );
+        if (updatedOrderIndex !== -1) {
+          state.orders[updatedOrderIndex] = action.payload;
+        }
+      })
+      .addCase(updateOrderByConfirmer.rejected, (state, action) => {
         state.loadingStatusOrder = false;
         state.error = action.payload ?? "خطاء في تاكيد الطلب";
       })

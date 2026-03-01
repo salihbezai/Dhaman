@@ -19,7 +19,7 @@ import {
 } from "lucide-react-native";
 import { ROLE_LABELS_AR } from "@/src/utils/utility";
 import { logout } from "../../src/features/auth/authSlice";
-
+import packageJson from "../../package.json";
 export default function ProfileScreen() {
   const { user, loading } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<AppDispatch>();
@@ -98,7 +98,7 @@ export default function ProfileScreen() {
         className="text-center text-slate-300 font-bold text-[10px] mt-10 
       uppercase tracking-widest pb-10"
       >
-        DHAMAN PRO v1.0.0
+         © 2026 Dhaman Logistics Solutions V{packageJson.version}
       </Text>
     </ScrollView>
   );

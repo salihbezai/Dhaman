@@ -1,13 +1,12 @@
-
-import React from 'react';
-import { Image } from 'react-native';
+import { ShieldCheck } from "lucide-react-native";
+import React from "react";
+import { Image, View } from "react-native";
 
 const Logo = () => {
   return (
-    <Image
-      source={require('../assets/images/DhamanLogo.png')} // replace with your path
-      style={{ width: 100, height: 100, resizeMode: 'contain' }}
-    />
+    <View className="w-24 h-24 bg-emerald-500 rounded-[30px] items-center justify-center shadow-xl shadow-emerald-500/40 mb-4">
+      <ShieldCheck size={50} color="white" strokeWidth={2.5} />
+    </View>
   );
 };
 

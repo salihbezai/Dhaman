@@ -60,6 +60,37 @@ export const createOrder = async (req: Request, res: Response) => {
   }
 };
 
+
+// update order
+export const updateOrder = async (req: Request, res: Response) => {
+  try {
+        const { customerName, customerPhone, totalAmount, wilaya, address, items } = req.body;
+
+    const id = req.params.id as string;
+    // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Order ID format" });
+    }
+
+
+    const order = await Order.findById(id);
+
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    order.customerName = customerName;
+    order.customerPhone = customerPhone;
+    order.totalAmount = totalAmount;
+    order.wilaya = wilaya;
+    order.address = address;
+    order.items = items;
+
+    await order.save();
+    res.status(200).json({ order });
+  } catch (err) {
+    res.status(400).json({ message: "Update failed" });
+  }
+}
+
 // 3. Action: No Answer (Handles the 3-call logic)
 export const handleNoAnswer = async (req: Request, res: Response) => {
   try {
