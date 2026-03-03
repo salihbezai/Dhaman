@@ -7,19 +7,29 @@ import {
   confirmOrder,
   handleCancelOrder,
   handlePostponeOrder,
-  updateOrder, 
+  updateOrder,
+  handleRemoveOrder,
+  getProducts, 
 } from '../controllers/confirmerController';
 
 const router = Router();
 
 
 router.get('/orders',protect, confirmerOnly,getConfirmerOrders);
+
 router.post('/orders',createOrder);
+
 router.put('/orders/:id',updateOrder);
 router.put('/orders/:id/no-answer',protect, confirmerOnly,handleNoAnswer);
 router.put('/orders/:id/confirm', protect, confirmerOnly, confirmOrder);
 router.put('/orders/:id/cancel', protect, confirmerOnly, handleCancelOrder);
 router.put('/orders/:id/postpone', protect, confirmerOnly, handlePostponeOrder);
+
+// delete order
+router.delete('/orders/:id',protect, confirmerOnly, handleRemoveOrder);
+
+// get the products
+router.get('/products',protect, confirmerOnly, getProducts);
 
 
 

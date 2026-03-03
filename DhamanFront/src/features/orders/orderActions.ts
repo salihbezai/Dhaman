@@ -3,24 +3,38 @@ import { getErrorMessage } from "@/src/utils/errorHelper";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Order } from "./orderSlice";
 
-interface orderResponse {
+export interface orderResponse {
   orders: Order[];
 }
 
-export const getConfirmerOrders = createAsyncThunk<
-  orderResponse,
+export const getOrders = createAsyncThunk<
+  Order[],
   void,
   { rejectValue: string }
->("orders/getConfirmerOrders", async (_, { rejectWithValue }) => {
+>("orders/getOrders", async (_, { rejectWithValue }) => {
   try {
     const { data } = await api.get("/confirmer/orders");
 
     console.log("the data that we got " + JSON.stringify(data));
-    return data;
+    return data.orders;
   } catch (error: unknown) {
     return rejectWithValue(getErrorMessage(error));
   }
 });
+
+export const handleAddOrder = createAsyncThunk<
+  Order,
+  { formData: any },
+  { rejectValue: string } 
+>("orders/handleAddOrder", async ({ formData }, { rejectWithValue }) => {
+  try {
+    const { data } = await api.post("/confirmer/orders", formData);
+    console.log("the new order is "+JSON.stringify(data))
+    return data.newOrder;
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error));
+  }
+})
 
 export const handleCancelOrder = createAsyncThunk<
   Order,
@@ -98,6 +112,21 @@ export const updateOrderByConfirmer = createAsyncThunk<
 >("orders/updateOrderByConfirmer", async ({ formData }, { rejectWithValue }) => {
   try {
     const { data } = await api.put(`/confirmer/orders/${formData._id}`, formData);
+    return data.order;
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error));
+  }
+})
+
+
+// remove order
+export const handleRemoveOrderByConfirmer = createAsyncThunk<
+  Order,
+  { id: string },
+  { rejectValue: string }
+>("orders/handleRemoveOrderByConfirmer", async ({ id }, { rejectWithValue }) => {
+  try {
+    const { data } = await api.delete(`/confirmer/orders/${id}`);
     return data.order;
   } catch (error: unknown) {
     return rejectWithValue(getErrorMessage(error));

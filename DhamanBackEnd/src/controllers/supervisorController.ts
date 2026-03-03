@@ -5,10 +5,8 @@ import bcrypt from "bcrypt";
 import { Product } from '../models/Product';
 
 export const getTeam = async (req: Request, res: Response) => {
-    console.log("trying to get teams")
   const team = await User.find({ role: { $ne: UserRole.SUPERVISOR } }).select('-password -refreshTokens');
-    console.log("the result "+JSON.stringify(team))
-  res.json(team);
+  res.json({team});
 };
 
 export const createUser = async (req: Request, res: Response) => {
@@ -25,9 +23,19 @@ export const deleteUser = async (req: Request, res: Response) => {
   res.json({ message: {en:"User deleted", ar:"تم حذف المستخدم"} });
 };
 
+
+
 export const getAllOrders = async (req: Request, res: Response) => {
-  const orders = await Order.find().sort({ createdAt: -1 });
-  res.json(orders);
+  try {
+    console.log("trying to get them");
+    const orders = await Order.find()
+      .populate("items.product", "name sku basePrice")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ orders });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching orders" });
+  }
 };
 
 

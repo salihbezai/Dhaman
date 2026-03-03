@@ -22,13 +22,14 @@ import { Product } from "../models/Product";
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const { items, ...orderData } = req.body;
-
+    console.log("items "+JSON.stringify(items))
+    console.log("orderData "+JSON.stringify(orderData))
     // 1. Map through items and fetch real details from DB
     const processedItems = await Promise.all(
       items.map(async (item: any) => {
-        const productDoc = await Product.findById(item.product);
+        const productDoc = await Product.findById(item.productId);
 
-        if (!productDoc) throw new Error(`Product ${item.product} not found`);
+        if (!productDoc) throw new Error(`Product ${item.productId} not found`);
 
         return {
           product: productDoc._id,
@@ -54,8 +55,9 @@ export const createOrder = async (req: Request, res: Response) => {
     });
 
     await newOrder.save();
-    res.status(201).json(newOrder);
+    res.status(201).json({newOrder});
   } catch (err: any) {
+    console.log("soemthing went wrong ? "+err)
     res.status(400).json({ message: err.message });
   }
 };
@@ -217,6 +219,30 @@ export const handlePostponeOrder = async (req: Request, res: Response) => {
       { new: true },
     );
     res.status(200).json({ order });
+  } catch (err) {
+    res.status(400).json({ message: "Update failed" });
+  }
+};
+
+
+export const handleRemoveOrder = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Order ID format" });
+    }
+    const order = await Order.findByIdAndDelete(id);
+    res.status(200).json({ order });
+  } catch (err) {
+    res.status(400).json({ message: "Update failed" });
+  }
+};
+
+export const getProducts = async (req: Request, res: Response) => {
+  try {
+    const products = await Product.find({}).sort({ createdAt: -1 });
+    res.status(200).json({ products });
   } catch (err) {
     res.status(400).json({ message: "Update failed" });
   }

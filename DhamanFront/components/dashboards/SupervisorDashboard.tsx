@@ -25,17 +25,19 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react-native";
-import { useSelector } from "react-redux";
-import { RootState } from "@/src/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/src/store/store";
 import api from "@/src/api/axios";
 import { StatusBar } from "expo-status-bar";
+import { getOrders } from "@/src/features/supervisor/supervisorActions";
+import { getTeamMembers } from "@/src/features/supervisor/supervisorActions";
 
 export default function SupervisorDashboard() {
   const { user: supervisor } = useSelector((state: RootState) => state.auth);
+  const { team,orders, loading } = useSelector((state: RootState) => state.supervisor);
+  const dispatch = useDispatch<AppDispatch>();
+
   const [activeTab, setActiveTab] = useState<"orders" | "team">("orders");
-  const [orders, setOrders] = useState([]);
-  const [team, setTeam] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false); // Added this state
 
   // Modal State
@@ -46,7 +48,7 @@ export default function SupervisorDashboard() {
     email: "",
     password: "",
     phone: "",
-    role: "CONFIRMER",
+    role: "",
   });
 
   useEffect(() => {
@@ -54,33 +56,27 @@ export default function SupervisorDashboard() {
   }, [activeTab]);
 
   const fetchData = async () => {
-    try {
-      setLoading(true);
-      const endpoint =
-        activeTab === "orders" ? "/supervisor/orders" : "/supervisor/team";
-      const { data } = await api.get(endpoint);
-      activeTab === "orders" ? setOrders(data) : setTeam(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+
+    if (activeTab === "orders") {
+      await dispatch(getOrders()).unwrap();
+    } else {
+      await dispatch(getTeamMembers()).unwrap();
     }
+
   };
 
   // Added this function for pull-to-refresh
   const onRefresh = async () => {
     setRefreshing(true);
-    const endpoint =
-      activeTab === "orders" ? "/supervisor/orders" : "/supervisor/team";
-    try {
-      const { data } = await api.get(endpoint);
-      activeTab === "orders" ? setOrders(data) : setTeam(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setRefreshing(false);
+      if (activeTab === "orders") {
+      await dispatch(getOrders());
+    } else {
+       await dispatch(getTeamMembers()).unwrap();
     }
+      setRefreshing(false);
+    
   };
+
 
   const handleAddUser = async () => {
     try {

@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getConfirmerOrders, handleCancelOrder, handleConfirmTheOrder, handleNoAnswerOrder, handlePostponeOrder, updateOrderByConfirmer } from "./orderActions";
+import { getOrders, handleAddOrder, handleCancelOrder, handleConfirmTheOrder, handleNoAnswerOrder, handlePostponeOrder, handleRemoveOrderByConfirmer, updateOrderByConfirmer } from "./orderActions";
 
 export interface Order {
     _id: string;
@@ -64,17 +64,17 @@ const orderSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(getConfirmerOrders.pending, (state) => {
+      .addCase(getOrders.pending, (state) => {
         state.loading = true;
         state.refreshing = true;
         state.error = null;
       })
-      .addCase(getConfirmerOrders.fulfilled, (state, action) => {
+      .addCase(getOrders.fulfilled, (state, action) => {
         state.loading = false;
         state.refreshing = false;
-        state.orders = action.payload.orders;
+        state.orders = action.payload;
       })
-      .addCase(getConfirmerOrders.rejected, (state, action) => {
+      .addCase(getOrders.rejected, (state, action) => {
         state.loading = false;
         state.refreshing = false;
         state.error = action.payload ?? "خطاء في جلب الطلبات";
@@ -97,6 +97,19 @@ const orderSlice = createSlice({
       .addCase(handleNoAnswerOrder.rejected, (state, action) => {
         state.loadingStatusOrder = false;
         state.error = action.payload ?? "خطاء في رفض الطلب";
+      })
+      .addCase(handleAddOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(handleAddOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.orders.push(action.payload);
+      })
+      .addCase(handleAddOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "خطاء في اضافة الطلبية";
       })
       .addCase(handleCancelOrder.pending, (state) => {
         state.loadingStatusOrder = true;
@@ -153,11 +166,11 @@ const orderSlice = createSlice({
         state.error = action.payload ?? "خطاء في تاكيد الطلب";
       })
       .addCase(updateOrderByConfirmer.pending, (state) => {
-        state.loadingStatusOrder = true;
+        state.loading = true;
         state.error = null;
       })
       .addCase(updateOrderByConfirmer.fulfilled, (state, action) => {
-        state.loadingStatusOrder = false;
+        state.loading = false;
         state.error = null;
         const updatedOrderIndex = state.orders.findIndex(
           (order) => order._id === action.payload._id,
@@ -167,7 +180,25 @@ const orderSlice = createSlice({
         }
       })
       .addCase(updateOrderByConfirmer.rejected, (state, action) => {
-        state.loadingStatusOrder = false;
+        state.loading = false;
+        state.error = action.payload ?? "خطاء في تاكيد الطلب";
+      })
+      .addCase(handleRemoveOrderByConfirmer.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(handleRemoveOrderByConfirmer.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        const updatedOrderIndex = state.orders.findIndex(
+          (order) => order._id === action.payload._id,
+        );
+        if (updatedOrderIndex !== -1) {
+          state.orders.splice(updatedOrderIndex, 1);
+        }
+      })
+      .addCase(handleRemoveOrderByConfirmer.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload ?? "خطاء في تاكيد الطلب";
       })
   },
