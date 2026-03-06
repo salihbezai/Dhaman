@@ -132,3 +132,18 @@ export const handleRemoveOrderByConfirmer = createAsyncThunk<
     return rejectWithValue(getErrorMessage(error));
   }
 })
+
+
+export const geSupservisortOrders = createAsyncThunk<
+  Order[],
+  void,
+  { rejectValue: string }
+>("orders/getOrders", async (_, { rejectWithValue }) => {
+  try {
+    const { data } = await api.get("/supervisor/orders");
+
+    return data.orders;
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error));
+  }
+});

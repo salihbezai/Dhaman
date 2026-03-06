@@ -7,11 +7,11 @@ import {
   register,
   updateUserProfile,
 } from "../controllers/authController";
-import { protect } from "../middlewares/authMiddleware";
+import { protect, adminOnly } from '../middlewares/authMiddleware';
 
 const router = Router();
 
-router.post("/register", register);
+router.post("/register", protect,adminOnly,register);
 router.post("/login", login);
 router.get("/me", protect, getUserProfile);
 router.post("/refresh", refresh);
