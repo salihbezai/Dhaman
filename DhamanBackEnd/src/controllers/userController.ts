@@ -34,7 +34,8 @@ interface NewUserResponseBody {
 
 export const addNewUser = async (req: Request, res: Response) => {
   const { username, email, password, phone, role } =
-    req.body as NewUserRequestBody;
+    req.body.formdata as NewUserRequestBody;
+    console.log("the body is "+JSON.stringify(req.body))
 
   // validate required fields
   if (!username || !email || !password || !phone || !role) {

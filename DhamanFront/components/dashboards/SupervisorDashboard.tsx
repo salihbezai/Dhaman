@@ -23,12 +23,15 @@ import {
   Eye,
   EyeOff,
   ChevronDown,
+  Phone,
+  Mail,
+  Trash2,
 } from "lucide-react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/src/store/store";
 import api from "@/src/api/axios";
 import { StatusBar } from "expo-status-bar";
-import { addNewUser, getTeamMembers } from "@/src/features/user/userActions";
+import { addNewUser, getTeamMembers, deleteUser, updateUser } from "@/src/features/user/userActions";
 import { geSupservisortOrders } from "@/src/features/orders/orderActions";
 import { ORDER_STATUS_LABELS_AR, OrderStatusKey, ROLE_LABELS_AR } from "@/src/utils/utility";
 
@@ -41,11 +44,14 @@ export default function SupervisorDashboard() {
   const [activeTab, setActiveTab] = useState<"orders" | "team">("orders");
   const [refreshing, setRefreshing] = useState(false);
   const [viewingOrder, setViewingOrder] = useState<any>(null);
+  const [viewingMember, setViewingMember] = useState<any>(null); 
+  const [editingMember, setEditingMember] = useState<any>(null);
 
   // Modal State for adding user
   const [showModal, setShowModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
+  const [showEditRolePicker, setShowEditRolePicker] = useState(false);
   
   const [formData, setFormData] = useState({
     username: "",
@@ -90,22 +96,14 @@ export default function SupervisorDashboard() {
 
   const handleAddUser = async () => {
     const { username, email, password, confirmPassword, phone, role } = formData;
-
-    // 1. Check if fields are empty
     if (!username || !email || !password || !confirmPassword || !phone || !role) {
       Alert.alert("تنبيه", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
-
-    // 2. Check if passwords match
     if (password !== confirmPassword) {
       Alert.alert("خطأ", "كلمة المرور غير متطابقة");
       return;
     }
-
-   
-    
-
     try {
       await dispatch(addNewUser({ formdata: formData })).unwrap();
       setShowModal(false);
@@ -114,6 +112,35 @@ export default function SupervisorDashboard() {
       Alert.alert("نجاح", "تم إضافة الموظف بنجاح");
     } catch (err: any) {
       Alert.alert("خطأ", err || "فشل في إضافة الموظف");
+    }
+  };
+
+  const handleDeleteMember = (memberId: string) => {
+    Alert.alert("تأكيد الحذف", "هل أنت متأكد من حذف هذا الموظف؟", [
+      { text: "إلغاء", style: "cancel" },
+      { 
+        text: "حذف", 
+        style: "destructive", 
+        onPress: async () => {
+          try {
+            await dispatch(deleteUser(memberId)).unwrap();
+            fetchData();
+          } catch (err) {
+            Alert.alert("خطأ", "فشل الحذف");
+          }
+        } 
+      },
+    ]);
+  };
+
+  const handleUpdateMember = async () => {
+    try {
+      await dispatch(updateUser({ id: editingMember._id, data: editingMember })).unwrap();
+      setEditingMember(null);
+      fetchData();
+      Alert.alert("نجاح", "تم تحديث البيانات");
+    } catch (err) {
+      Alert.alert("خطأ", "فشل التحديث");
     }
   };
 
@@ -219,14 +246,122 @@ export default function SupervisorDashboard() {
                     {ROLE_LABELS_AR[member.role as keyof typeof ROLE_LABELS_AR] || member.role}
                   </Text>
                 </View>
-                <TouchableOpacity className="p-2">
-                  <Pencil size={18} color="#94a3b8" />
-                </TouchableOpacity>
+                <View className="flex-row gap-2">
+                  <TouchableOpacity onPress={() => setViewingMember(member)} className="p-2 bg-slate-50 rounded-xl border border-slate-100">
+                    <Eye size={18} color="#64748b" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setEditingMember(member)} className="p-2">
+                    <Pencil size={18} color="#3b82f6" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleDeleteMember(member._id)} className="p-2">
+                    <Trash2 size={18} color="#ef4444" />
+                  </TouchableOpacity>
+                </View>
               </View>
             ))}
           </View>
         )}
       </ScrollView>
+
+      {/* --- Edit Member Modal --- */}
+      <Modal visible={!!editingMember} animationType="slide" transparent>
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-[40px] p-8">
+            <View className="flex-row-reverse justify-between items-center mb-6">
+              <Text className="text-xl font-black text-slate-900">تعديل بيانات الموظف</Text>
+              <TouchableOpacity onPress={() => setEditingMember(null)}><X size={24} color="#0f172a" /></TouchableOpacity>
+            </View>
+            <TextInput 
+              placeholder="اسم المستخدم" 
+              value={editingMember?.username} 
+              className="bg-slate-50 p-4 rounded-2xl mb-3 font-bold text-right" 
+              onChangeText={(t) => setEditingMember({...editingMember, username: t})} 
+            />
+            {/* Added Email Field Back Here */}
+            <TextInput 
+              placeholder="البريد الالكتروني" 
+              value={editingMember?.email} 
+              keyboardType="email-address"
+              className="bg-slate-50 p-4 rounded-2xl mb-3 font-bold text-right" 
+              onChangeText={(t) => setEditingMember({...editingMember, email: t})} 
+            />
+            <TextInput 
+              placeholder="رقم الهاتف" 
+              value={editingMember?.phone} 
+              keyboardType="phone-pad" 
+              className="bg-slate-50 p-4 rounded-2xl mb-3 font-bold text-right" 
+              onChangeText={(t) => setEditingMember({...editingMember, phone: t})} 
+            />
+            <TouchableOpacity 
+              onPress={() => setShowEditRolePicker(!showEditRolePicker)}
+              className="bg-slate-50 p-4 rounded-2xl mb-6 flex-row-reverse justify-between items-center"
+            >
+              <Text className="font-bold text-slate-900">
+                {editingMember?.role ? ROLE_LABELS_AR[editingMember.role as keyof typeof ROLE_LABELS_AR] : "اختر الوظيفة"}
+              </Text>
+              <ChevronDown size={20} color="#94a3b8" />
+            </TouchableOpacity>
+
+            {showEditRolePicker && (
+              <View className="bg-slate-100 rounded-2xl p-2 mb-3">
+                {Object.entries(ROLE_LABELS_AR).map(([key, label]) => (
+                  <TouchableOpacity 
+                    key={key} 
+                    className="p-3 border-b border-slate-200 last:border-0"
+                    onPress={() => {
+                      setEditingMember({ ...editingMember, role: key as any });
+                      setShowEditRolePicker(false);
+                    }}
+                  >
+                    <Text className="text-right font-bold text-slate-700">{label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            <TouchableOpacity onPress={handleUpdateMember} className="bg-slate-900 py-5 rounded-3xl items-center mb-10">
+              <Text className="text-white font-black">حفظ التعديلات</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- Team Member Details Modal --- */}
+      <Modal visible={!!viewingMember} animationType="slide" transparent onRequestClose={() => setViewingMember(null)}>
+        <View className="flex-1 justify-end bg-black/40">
+          <View className="bg-white rounded-t-[3rem] p-8 shadow-2xl">
+            <View className="w-12 h-1.5 bg-slate-200 rounded-full self-center mb-6" />
+            <Text className="text-slate-900 text-xl font-black mb-6 ">بيانات الموظف</Text>
+            
+            <View className="bg-slate-50 rounded-3xl p-5 mb-8 border border-slate-100">
+              <View className="flex-row-reverse items-center mb-4">
+                <View className="bg-emerald-500/10 p-2 rounded-xl  mr-2">
+                  <Users size={20} color="#10b981"/>
+                </View>
+                <Text className="text-slate-800 font-black mr-3 flex-1 text-right">{viewingMember?.username}</Text>
+              </View>
+              
+              <View className="flex-row-reverse items-center mb-4">
+                <View className="bg-blue-500/10 p-2 rounded-xl mr-2">
+                  <Mail size={20} color="#3b82f6" />
+                </View>
+                <Text className="text-slate-600 font-bold mr-3 flex-1 text-right">{viewingMember?.email}</Text>
+              </View>
+
+              <View className="flex-row-reverse items-center">
+                <View className="bg-amber-500/10 p-2 rounded-xl mr-2">
+                  <Phone size={20} color="#f59e0b" />
+                </View>
+                <Text className="text-slate-600 font-bold mr-3 flex-1 text-right">{viewingMember?.phone || "غير متوفر"}</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity onPress={() => setViewingMember(null)} className="bg-slate-900 py-4 rounded-2xl items-center mb-4">
+              <Text className="text-white font-black text-base">إغلاق</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* --- Order Details Modal --- */}
       <Modal visible={!!viewingOrder} animationType="slide" transparent onRequestClose={() => setViewingOrder(null)}>
@@ -335,6 +470,3 @@ export default function SupervisorDashboard() {
     </View>
   );
 }
-
-
-
