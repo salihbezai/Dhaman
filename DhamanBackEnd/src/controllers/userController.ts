@@ -101,3 +101,118 @@ export const addNewUser = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+export const setUserInactif = async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findById(userId).select("-password -refreshTokens");
+    if (!user) {
+      return res.status(404).json({
+        message: {
+          en: "User not found.",
+          ar: "المستخدم غير موجود.",
+        },
+      });
+    }
+
+    user.isActive = false;
+    await user.save();
+
+    res.status(200).json({user});
+  } catch (error) {
+    const err = error as Error;
+    logger.error({
+      message: "Error during setting user inactif",
+      error: err.message,
+      stack: err.stack,
+      route: req.originalUrl,
+    });
+    res.status(500).json({
+      message: {
+        en: "Server error during setting user inactif.",
+        ar: "خطاء في الخادم اثناء تعطيل المستخدم.",
+      },
+    });
+  }
+};
+
+// set user actif
+export const setUserActif = async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findById(userId).select("-password -refreshTokens");
+    if (!user) {
+      return res.status(404).json({
+        message: {
+          en: "User not found.",
+          ar: "المستخدم غير موجود.",
+        },
+      });
+    }
+
+    user.isActive = true;
+    await user.save();
+
+    res.status(200).json({user});
+  } catch (error) {
+    const err = error as Error;
+    logger.error({
+      message: "Error during setting user actif",
+      error: err.message,
+      stack: err.stack,
+      route: req.originalUrl,
+    });
+    res.status(500).json({
+      message: {
+        en: "Server error during setting user actif.",
+        ar: "خطاء في الخادم اثناء تفعيل المستخدم.",
+      },
+    });
+  }
+}
+
+export const updateMemberInfo = async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { username, email, phone } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: {
+          en: "User not found.",
+          ar: "المستخدم غير موجود.",
+        },
+      });
+    }
+
+    user.username = username;
+    user.email = email;
+    user.phone = phone;
+    await user.save();
+
+    res.status(200).json({
+      message: {
+        en: "User info updated successfully.",
+        ar: "تم تحديث معلومات المستخدم بنجاح.",
+      },
+    });
+  } catch (error) {
+    const err = error as Error;
+    logger.error({
+      message: "Error during updating user info",
+      error: err.message,
+      stack: err.stack,
+      route: req.originalUrl,
+    });
+    res.status(500).json({
+      message: {
+        en: "Server error during updating user info.",
+        ar: "خطاء في الخادم اثناء تحديث معلومات المستخدم.",
+      },
+    });
+  }
+};

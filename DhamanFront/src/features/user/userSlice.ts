@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { addNewUser, getTeamMembers } from "./userActions";
+import { activateUser, addNewUser, desactivateUser, getTeamMembers } from "./userActions";
 
 export interface User {
   id: string;
@@ -69,7 +69,51 @@ const userSlice = createSlice({
       .addCase(getTeamMembers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "خطاء في جلب الموظفين";
-      });
+      })
+      .addCase(desactivateUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(desactivateUser.fulfilled, (state, action) => {
+        state.loading = false;
+        // we are going to get the updated team member from the action payload
+        const updatedMember = action.payload;
+        const updatedMemberIndex = state.team.findIndex(
+          (member) => member._id === updatedMember._id,
+        );
+        state.team.splice(
+          updatedMemberIndex,
+          1,
+          updatedMember,
+        )
+        state.error = null;
+      })
+      .addCase(desactivateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "خطاء في حذف الموظف";
+      })
+      .addCase(activateUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(activateUser.fulfilled, (state, action) => {
+        state.loading = false;
+        // we are going to get the updated team member from the action payload
+        const updatedMember = action.payload;
+        const updatedMemberIndex = state.team.findIndex(
+          (member) => member._id === updatedMember._id,
+        );
+        state.team.splice(
+          updatedMemberIndex,
+          1,
+          updatedMember,
+        )
+        state.error = null;
+      })
+      .addCase(activateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "خطاء في تفعيل الموظف";
+      })
   },
 });
 

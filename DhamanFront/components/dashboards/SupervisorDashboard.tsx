@@ -31,7 +31,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/src/store/store";
 import api from "@/src/api/axios";
 import { StatusBar } from "expo-status-bar";
-import { addNewUser, getTeamMembers, deleteUser, updateUser } from "@/src/features/user/userActions";
+import { addNewUser, getTeamMembers, deleteUser, updateUser, desactivateUser } from "@/src/features/user/userActions";
 import { geSupservisortOrders } from "@/src/features/orders/orderActions";
 import { ORDER_STATUS_LABELS_AR, OrderStatusKey, ROLE_LABELS_AR } from "@/src/utils/utility";
 
@@ -108,22 +108,21 @@ export default function SupervisorDashboard() {
       await dispatch(addNewUser({ formdata: formData })).unwrap();
       setShowModal(false);
       setFormData({ username: "", email: "", password: "", confirmPassword: "", phone: "", role: "" });
-      fetchData();
       Alert.alert("نجاح", "تم إضافة الموظف بنجاح");
     } catch (err: any) {
       Alert.alert("خطأ", err || "فشل في إضافة الموظف");
     }
   };
 
-  const handleDeleteMember = (memberId: string) => {
-    Alert.alert("تأكيد الحذف", "هل أنت متأكد من حذف هذا الموظف؟", [
+  const handleDesactivateUser = (memberId: string) => {
+    Alert.alert("تعطيل المستخدم", "هل تريد تعطيل هذا المستخدم؟", [
       { text: "إلغاء", style: "cancel" },
       { 
         text: "حذف", 
         style: "destructive", 
         onPress: async () => {
           try {
-            await dispatch(deleteUser(memberId)).unwrap();
+            await dispatch(desactivateUser({id: memberId})).unwrap();
             fetchData();
           } catch (err) {
             Alert.alert("خطأ", "فشل الحذف");
@@ -253,7 +252,7 @@ export default function SupervisorDashboard() {
                   <TouchableOpacity onPress={() => setEditingMember(member)} className="p-2">
                     <Pencil size={18} color="#3b82f6" />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleDeleteMember(member._id)} className="p-2">
+                  <TouchableOpacity onPress={() => handleDesactivateUser(member._id)} className="p-2">
                     <Trash2 size={18} color="#ef4444" />
                   </TouchableOpacity>
                 </View>

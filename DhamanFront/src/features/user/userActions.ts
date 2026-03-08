@@ -37,3 +37,16 @@ export const getTeamMembers = createAsyncThunk<
         return rejectWithValue(getErrorMessage(error));
     }
 });
+
+export const desactivateUser = createAsyncThunk<
+  any,
+  { id: string },
+  { rejectValue: string }
+>("users/desactivateUser", async ({ id }, { rejectWithValue }) => {
+  try {
+    const { data } = await api.put(`/users/member/inactif/${id}`);
+    return data;
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error));
+  }
+});
