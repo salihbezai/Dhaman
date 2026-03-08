@@ -1,7 +1,7 @@
 import api from "@/src/api/axios";
 import { getErrorMessage } from "@/src/utils/errorHelper";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { teamMember, User } from "./userSlice";
+import { teamMember } from "./userSlice";
 
 
 
@@ -44,9 +44,39 @@ export const desactivateUser = createAsyncThunk<
   { rejectValue: string }
 >("users/desactivateUser", async ({ id }, { rejectWithValue }) => {
   try {
+    console.log("the id "+id)
     const { data } = await api.put(`/users/member/inactif/${id}`);
-    return data;
+    return data.user;
   } catch (error: unknown) {
     return rejectWithValue(getErrorMessage(error));
   }
 });
+
+export const activateUser = createAsyncThunk<
+  any,
+  { id: string },
+  { rejectValue: string }
+>("users/activateUser", async ({ id }, { rejectWithValue }) => {
+  try {
+    const { data } = await api.put(`/users/member/actif/${id}`);
+    return data.user;
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error));
+  }
+});
+
+export const updateMember = createAsyncThunk<
+  any,
+  { id: string, memberInfo: any },
+  { rejectValue: string }
+>("users/updateUser", async ({ id, memberInfo }, { rejectWithValue }) => {
+  try {
+    console.log("the memberinfo "+JSON.stringify(memberInfo))
+    const { data } = await api.put(`/users/member/update/${id}`, memberInfo);
+    return data.user;
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error));
+  }
+});
+
+

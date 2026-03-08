@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { activateUser, addNewUser, desactivateUser, getTeamMembers } from "./userActions";
+import { activateUser, addNewUser, desactivateUser, getTeamMembers, updateMember } from "./userActions";
 
 export interface User {
   id: string;
@@ -113,6 +113,29 @@ const userSlice = createSlice({
       .addCase(activateUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "خطاء في تفعيل الموظف";
+      })
+
+      .addCase(updateMember.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateMember.fulfilled, (state, action) => {
+        state.loading = false;
+        // we are going to get the updated team member from the action payload
+        const updatedMember = action.payload;
+        const updatedMemberIndex = state.team.findIndex(
+          (member) => member._id === updatedMember._id,
+        );
+        state.team.splice(
+          updatedMemberIndex,
+          1,
+          updatedMember,
+        )
+        state.error = null;
+      })
+      .addCase(updateMember.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "خطاء في تعديل الموظف";
       })
   },
 });

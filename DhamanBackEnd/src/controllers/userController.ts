@@ -33,9 +33,9 @@ interface NewUserResponseBody {
 }
 
 export const addNewUser = async (req: Request, res: Response) => {
-  const { username, email, password, phone, role } =
-    req.body.formdata as NewUserRequestBody;
-    console.log("the body is "+JSON.stringify(req.body))
+  const { username, email, password, phone, role } = req.body
+    .formdata as NewUserRequestBody;
+  console.log("the body is " + JSON.stringify(req.body));
 
   // validate required fields
   if (!username || !email || !password || !phone || !role) {
@@ -102,12 +102,11 @@ export const addNewUser = async (req: Request, res: Response) => {
   }
 };
 
-
 export const setUserInactif = async (req: Request, res: Response) => {
-  const { userId } = req.params;
-
+  const { id } = req.params;
+  console.log("the id " + id);
   try {
-    const user = await User.findById(userId).select("-password -refreshTokens");
+    const user = await User.findById(id).select("-password -refreshTokens");
     if (!user) {
       return res.status(404).json({
         message: {
@@ -120,7 +119,7 @@ export const setUserInactif = async (req: Request, res: Response) => {
     user.isActive = false;
     await user.save();
 
-    res.status(200).json({user});
+    res.status(200).json({ user });
   } catch (error) {
     const err = error as Error;
     logger.error({
@@ -140,10 +139,10 @@ export const setUserInactif = async (req: Request, res: Response) => {
 
 // set user actif
 export const setUserActif = async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const { id } = req.params;
 
   try {
-    const user = await User.findById(userId).select("-password -refreshTokens");
+    const user = await User.findById(id).select("-password -refreshTokens");
     if (!user) {
       return res.status(404).json({
         message: {
@@ -156,7 +155,7 @@ export const setUserActif = async (req: Request, res: Response) => {
     user.isActive = true;
     await user.save();
 
-    res.status(200).json({user});
+    res.status(200).json({ user });
   } catch (error) {
     const err = error as Error;
     logger.error({
@@ -172,14 +171,14 @@ export const setUserActif = async (req: Request, res: Response) => {
       },
     });
   }
-}
+};
 
 export const updateMemberInfo = async (req: Request, res: Response) => {
-  const { userId } = req.params;
-  const { username, email, phone } = req.body;
+  const { id } = req.params;
+  const { username, email, phone, role } = req.body;
 
   try {
-    const user = await User.findById(userId);
+    const user = await User.findById(id).select("-password -refreshTokens");
     if (!user) {
       return res.status(404).json({
         message: {
@@ -192,14 +191,10 @@ export const updateMemberInfo = async (req: Request, res: Response) => {
     user.username = username;
     user.email = email;
     user.phone = phone;
+    user.role = role;
     await user.save();
 
-    res.status(200).json({
-      message: {
-        en: "User info updated successfully.",
-        ar: "تم تحديث معلومات المستخدم بنجاح.",
-      },
-    });
+    res.status(200).json({ user });
   } catch (error) {
     const err = error as Error;
     logger.error({

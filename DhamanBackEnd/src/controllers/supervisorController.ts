@@ -5,7 +5,9 @@ import bcrypt from "bcrypt";
 import { Product } from '../models/Product';
 
 export const getTeam = async (req: Request, res: Response) => {
-  const team = await User.find({ role: { $ne: UserRole.SUPERVISOR } }).select('-password -refreshTokens');
+  const team = await User.find({ role: { $ne: UserRole.SUPERVISOR } })
+  .select('-password -refreshTokens')
+  .sort({ isActive: -1, username: 1 });
   res.json({team});
 };
 
