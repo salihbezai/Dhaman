@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getOrders, handleAddOrder, handleCancelOrder, handleConfirmTheOrder, handleNoAnswerOrder, handlePostponeOrder, handleRemoveOrderByConfirmer, updateOrderByConfirmer } from "./orderActions";
+import { getDriverOrders, getOrders, handleAddOrder, handleCancelOrder, handleConfirmTheOrder, handleNoAnswerOrder, handlePostponeOrder, handleRemoveOrderByConfirmer, sendArrivalNotification, updateOrderByConfirmer, updateOrderStatusByDriver } from "./orderActions";
 
 export interface Order {
     _id: string;
@@ -75,6 +75,21 @@ const orderSlice = createSlice({
         state.orders = action.payload;
       })
       .addCase(getOrders.rejected, (state, action) => {
+        state.loading = false;
+        state.refreshing = false;
+        state.error = action.payload ?? "خطاء في جلب الطلبات";
+      })
+      .addCase(getDriverOrders.pending, (state) => {
+        state.loading = true;
+        state.refreshing = true;
+        state.error = null;
+      })
+      .addCase(getDriverOrders.fulfilled, (state, action) => {
+        state.loading = false;
+        state.refreshing = false;
+        state.orders = action.payload;
+      })
+      .addCase(getDriverOrders.rejected, (state, action) => {
         state.loading = false;
         state.refreshing = false;
         state.error = action.payload ?? "خطاء في جلب الطلبات";
@@ -201,6 +216,44 @@ const orderSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? "خطاء في تاكيد الطلب";
       })
+      .addCase(updateOrderStatusByDriver.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateOrderStatusByDriver.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        const updatedOrderIndex = state.orders.findIndex(
+          (order) => order._id === action.payload._id,
+        );
+        if (updatedOrderIndex !== -1) {
+          state.orders[updatedOrderIndex] = action.payload;
+        }
+      })
+      .addCase(updateOrderStatusByDriver.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "خطاء في تاكيد الطلب";
+      })
+      .addCase(sendArrivalNotification.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(sendArrivalNotification.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        const updatedOrderIndex = state.orders.findIndex(
+          (order) => order._id === action.payload._id,
+        );
+        console.log("the updatedOrderIndex "+updatedOrderIndex)
+        if (updatedOrderIndex !== -1) {
+          state.orders[updatedOrderIndex] = action.payload;
+        }
+      })
+      .addCase(sendArrivalNotification.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "خطاء في تاكيد الطلب";
+      })
+
   },
 });
 

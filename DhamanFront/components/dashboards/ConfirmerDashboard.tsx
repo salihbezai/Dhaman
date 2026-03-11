@@ -342,7 +342,7 @@ const ConfirmerDashboard = () => {
           showsHorizontalScrollIndicator={false}
           className="flex-row"
         >
-          {["all", "PENDING", "CONFIRMED", "POSTPONED", "CANCELLED"].map(
+          {["all", "PENDING", "CONFIRMED", "DELIVERED", "POSTPONED", "CANCELLED"].map(
             (tab) => (
               <TouchableOpacity
                 key={tab}
@@ -358,6 +358,8 @@ const ConfirmerDashboard = () => {
                       ? "معلقة"
                       : tab === "CONFIRMED"
                         ? "مؤكدة"
+                        : tab === "DELIVERED"
+                          ? "تم التسليم"
                         : tab === "POSTPONED"
                           ? "مؤجلة"
                           : "ملغاة"}

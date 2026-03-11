@@ -29,7 +29,7 @@ interface IOrder extends Document {
   status: OrderStatus;
 
   confirmerId?: Types.ObjectId;
-  driverId?: Types.ObjectId;
+  driverId?: string;
 
   callAttempts: number;
   postponedDate?: Date;
@@ -76,7 +76,7 @@ const orderSchema = new Schema<IOrder>(
       default: OrderStatus.PENDING,
     },
     confirmerId: { type: Schema.Types.ObjectId, ref: "User" },
-    driverId: { type: Schema.Types.ObjectId, ref: "User" },
+    driverId: { type: String, ref: "User" },
     callAttempts: { type: Number, default: 0 },
     postponedDate: { type: Date },
     deliveryNotificationSent: { type: Boolean, default: false },

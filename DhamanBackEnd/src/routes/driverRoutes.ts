@@ -12,9 +12,9 @@ const router = Router();
 router.get('/orders', protect, getDriverOrders);
 
 // Update status (Delivered, Returned, etc.)
-router.patch('/orders/:id/status', protect, updateOrderStatus);
+router.put('/orders/:id/status', protect, updateOrderStatus);
 
 // Mark as arrived (Arrival Alert)
-router.patch('/orders/:id/arrive', protect, markArrival);
+router.put('/orders/:id/arrive', protect, markArrival);
 
 export default router;
