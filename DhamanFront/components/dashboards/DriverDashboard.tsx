@@ -139,7 +139,7 @@ export default function DriverDashboard() {
               <User size={24} color="#0f172a" />
             </View>
             <View className="items-end">
-              <Text className="text-[10px] font-black text-slate-900/60 uppercase">مرحباً بالسائق</Text>
+              <Text className="text-[10px] font-black text-slate-900/60 uppercase">مرحباً</Text>
               <Text className="font-black text-slate-900 text-lg">{driver?.username || "كمال"}</Text>
             </View>
           </View>
@@ -166,7 +166,7 @@ export default function DriverDashboard() {
         <View className="bg-slate-900 p-5 rounded-3xl flex-row-reverse justify-between items-center shadow-inner">
           <View className="items-end">
             <Text className="text-[10px] font-black text-slate-400 uppercase">
-              {activeTab === "active" ? "المهام الجارية" : "إجمالي المكتملة"}
+              {activeTab === "active" ? "المهام الجارية" : "الإجمالي"}
             </Text>
             <Text className="text-2xl font-black text-amber-400">{displayedOrders.length}</Text>
           </View>

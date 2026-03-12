@@ -2,6 +2,7 @@ import api from "@/src/api/axios";
 import { getErrorMessage } from "@/src/utils/errorHelper";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { teamMember } from "./userSlice";
+import { updateUserInfo } from '../../../../DhamanBackEnd/src/controllers/userController';
 
 
 
@@ -80,3 +81,17 @@ export const updateMember = createAsyncThunk<
 });
 
 
+
+
+export const updateUserProfileInfo = createAsyncThunk<
+  any,
+  { id: string, userInfo: any },
+  { rejectValue: string }
+>("users/updateUserInfo", async ({ id, userInfo }, { rejectWithValue }) => {
+  try {
+    const { data } = await api.put(`/users/update/${id}`, userInfo);
+    return data.user;
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error));
+  }
+});

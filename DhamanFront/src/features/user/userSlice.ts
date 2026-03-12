@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { activateUser, addNewUser, desactivateUser, getTeamMembers, updateMember } from "./userActions";
+import { activateUser, addNewUser, desactivateUser, getTeamMembers, updateMember, updateUserProfileInfo } from "./userActions";
 
 export interface User {
   id: string;
@@ -136,6 +136,19 @@ const userSlice = createSlice({
       .addCase(updateMember.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "خطاء في تعديل الموظف";
+      })
+      .addCase(updateUserProfileInfo.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUserProfileInfo.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.error = null;
+      })
+      .addCase(updateUserProfileInfo.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "خطاء في تعديل المستخدم";
       })
   },
 });

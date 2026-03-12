@@ -211,3 +211,99 @@ export const updateMemberInfo = async (req: Request, res: Response) => {
     });
   }
 };
+
+// update user info password and username
+export const updateUserInfo = async (req: Request, res: Response) => {
+  const { username, currentPassword, newPassword, email, phone } = req.body;
+  const { id } = req.params;
+
+  try {
+    let user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        message: {
+          en: "User not found.",
+          ar: "المستخدم غير موجود.",
+        },
+      });
+    }
+
+    if (!currentPassword) {
+      return res.status(400).json({
+        message: {
+          en: "Current password is required.",
+          ar: "كلمة المرور الحالية مطلوبة.",
+        },
+      });
+    }
+
+    const isPasswordMatch = await bcrypt.compare(
+      currentPassword,
+      user.password!,
+    );
+    if (!isPasswordMatch) {
+      return res.status(400).json({
+        message: {
+          en: "Current password is incorrect.",
+          ar: "كلمة المرور الحالية غير صحيحة.",
+        },
+      });
+    }
+
+    // see if username already exist  and is not the current user
+    const existingUser = await User.findOne({ username });
+    if (existingUser && existingUser._id.toString() !== id) {
+      return res.status(400).json({
+        message: {
+          en: "Username already exists.",
+          ar: "اسم المستخدم موجود بالفعل.",
+        },
+      });
+    }
+    // check if email already exist  and is not the current user
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail && existingEmail._id.toString() !== id) {
+      return res.status(400).json({
+        message: {
+          en: "Email already exists.",
+          ar: "البريد الإلكتروني موجود بالفعل.",
+        },
+      });
+    }
+    // check if phone already exist  and is not the current user
+    const existingPhone = await User.findOne({ phone });
+    if (existingPhone && existingPhone._id.toString() !== id) {
+      return res.status(400).json({
+        message: {
+          en: "Phone already exists.",
+          ar: "رقم الهاتف موجود بالفعل.",
+        },
+      });
+    }
+    user.username = username;
+    user.email = email;
+    user.phone = phone;
+    if (newPassword && newPassword.trim() !== "") {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+    }
+
+    await user.save();
+    user = await User.findById(id).select("-password -refreshTokens");
+    res.status(200).json({ user });
+  } catch (error) {
+    const err = error as Error;
+    logger.error({
+      message: "Error during updating user info",
+      error: err.message,
+      stack: err.stack,
+      route: req.originalUrl,
+    });
+    res.status(500).json({
+      message: {
+        en: "Server error during updating user info.",
+        ar: "خطاء في الخادم اثناء تحديث معلومات المستخدم.",
+      },
+    });
+  }
+};
