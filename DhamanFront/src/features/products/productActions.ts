@@ -18,3 +18,4 @@ export const getProducts = createAsyncThunk<
         return rejectWithValue(getErrorMessage(error));
     }
 });
+

@@ -31,7 +31,7 @@ import packageJson from "../../package.json";
 import { updateUserProfileInfo } from "@/src/features/user/userActions";
 
 export default function ProfileScreen() {
-  const { user, loading: authLoading } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
@@ -164,7 +164,7 @@ export default function ProfileScreen() {
                 <Text className="text-slate-400 text-[10px] font-bold mb-2 uppercase">كلمة المرور الحالية (مطلوب)</Text>
                 <View className="flex-row-reverse items-center bg-slate-50 rounded-2xl px-4 border border-slate-100 w-full">
                   <Lock size={18} color="#94a3b8" />
-                  <TextInput secureTextEntry className="flex-1 py-4 px-3 text-right font-bold text-slate-700" placeholder="تأكيد الهوية" value={form.currentPassword} onChangeText={(t) => setForm({...form, currentPassword: t})} />
+                  <TextInput secureTextEntry className="flex-1 py-4 px-3 text-right font-bold text-slate-700" placeholder="أدخل كلمة المرور الحالية" value={form.currentPassword} onChangeText={(t) => setForm({...form, currentPassword: t})} />
                 </View>
               </View>
 
@@ -172,7 +172,7 @@ export default function ProfileScreen() {
                 <Text className="text-slate-400 text-[10px] font-bold mb-2 uppercase">كلمة المرور الجديدة (اختياري)</Text>
                 <View className="flex-row-reverse items-center bg-slate-50 rounded-2xl px-4 border border-slate-100 w-full">
                   <Lock size={18} color="#94a3b8" />
-                  <TextInput secureTextEntry className="flex-1 py-4 px-3 text-right font-bold text-slate-700" placeholder="اتركها فارغة إذا لم تكن تريد التغيير" value={form.newPassword} onChangeText={(t) => setForm({...form, newPassword: t})} />
+                  <TextInput secureTextEntry className="flex-1 py-4 px-3 text-right font-bold text-slate-700" placeholder="أدخل كلمة المرور الجديدة" value={form.newPassword} onChangeText={(t) => setForm({...form, newPassword: t})} />
                 </View>
               </View>
 
@@ -185,7 +185,7 @@ export default function ProfileScreen() {
       </Modal>
 
       <Text className="text-center text-slate-300 font-bold text-[10px] mt-10 uppercase tracking-widest pb-10">
-         © 2026 Dhaman Logistics Solutions V{packageJson.version}
+         © 2026 Dhaman Pro Logistics Solutions V{packageJson.version}
       </Text>
     </ScrollView>
   );

@@ -1,15 +1,21 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, Linking } from "react-native";
-import { 
-  ShieldCheck, 
-  Info, 
-  Mail, 
-  Globe, 
-  Github, 
-  Layers, 
-  CheckCircle2 
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Linking,
+} from "react-native";
+import {
+  ShieldCheck,
+  Info,
+  Mail,
+  Globe,
+  Github,
+  Layers,
+  CheckCircle2,
 } from "lucide-react-native";
-import packageJson from "../../package.json"
+import packageJson from "../../package.json";
 const AboutPage = () => {
   const appVersion = "1.0.0"; // Pull this from package.json if possible
 
@@ -34,24 +40,33 @@ const AboutPage = () => {
         <View className="w-24 h-24 bg-emerald-500 rounded-[30px] items-center justify-center shadow-xl shadow-emerald-500/40 mb-4">
           <ShieldCheck size={50} color="white" strokeWidth={2.5} />
         </View>
-        <Text className="text-white text-3xl font-black tracking-tighter">Dhaman Pro</Text>
+
+        <View className="flex-row items-center">
+          <Text className="text-white text-3xl font-black tracking-tighter mr-2">
+            DHAMAN 
+          </Text>
+          <Text className="text-3xl font-black tracking-tighter text-blue-600">PRO</Text>
+        </View>
+
         <Text className="text-emerald-400 font-bold text-sm mt-1 uppercase tracking-widest">
-           Confirmation System
+          Confirmation System
         </Text>
       </View>
 
       {/* 2. Content Section */}
       <View className="p-6 -mt-8">
         <View className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100">
-          <Text className="text-slate-800 text-xl font-black mb-6 text-right">حول المنصة</Text>
-          
-          <FeatureItem 
+          <Text className="text-slate-800 text-xl font-black mb-6 text-right">
+            حول المنصة
+          </Text>
+
+          <FeatureItem
             icon={CheckCircle2}
             title="دقة التأكيد"
             desc="نظام متطور لإدارة طلبيات التجارة الإلكترونية وضمان جودة البيانات قبل الشحن."
           />
-          
-          <FeatureItem 
+
+          <FeatureItem
             icon={Layers}
             title="إدارة ذكية"
             desc="تتبع محاولات الاتصال، تأجيل الطلبات، وتنظيم المواعيد بشكل آلي وسهل."
@@ -60,30 +75,38 @@ const AboutPage = () => {
 
         {/* 3. Support & Links */}
         <View className="mt-6 bg-slate-900 rounded-[2.5rem] p-6 shadow-xl">
-          <Text className="text-white text-lg font-black mb-4 text-right">الدعم الفني</Text>
-          
-          <TouchableOpacity 
-            onPress={() => Linking.openURL('mailto:support@dhaman.dz')}
+          <Text className="text-white text-lg font-black mb-4 text-right">
+            الدعم الفني
+          </Text>
+
+          <TouchableOpacity
+            onPress={() => Linking.openURL("mailto:support@dhaman.dz")}
             className="flex-row-reverse items-center bg-white/5 p-4 rounded-2xl mb-3"
           >
             <Mail size={20} color="#94a3b8" />
-            <Text className="text-slate-300 font-bold mr-3 flex-1 text-right">support@dhaman.dz</Text>
+            <Text className="text-slate-300 font-bold mr-3 flex-1 text-right">
+              support@dhaman.dz
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            onPress={() => Linking.openURL('https://dhaman.dz')}
+          <TouchableOpacity
+            onPress={() => Linking.openURL("https://dhaman.dz")}
             className="flex-row-reverse items-center bg-white/5 p-4 rounded-2xl"
           >
             <Globe size={20} color="#94a3b8" />
-            <Text className="text-slate-300 font-bold mr-3 flex-1 text-right">الموقع الرسمي</Text>
+            <Text className="text-slate-300 font-bold mr-3 flex-1 text-right">
+              الموقع الرسمي
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* 4. Footer Info */}
         <View className="items-center py-10">
-          <Text className="text-slate-400 font-bold text-xs">إصدار التطبيق {packageJson.version}</Text>
+          <Text className="text-slate-400 font-bold text-xs">
+            إصدار التطبيق {packageJson.version}
+          </Text>
           <Text className="text-slate-300 font-bold text-[10px] mt-1 uppercase">
-            © 2026 Dhaman Logistics Solutions
+            © 2026 Dhaman Pro Logistics Solutions
           </Text>
         </View>
       </View>

@@ -6,14 +6,15 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  TouchableOpacity, // Added this
 } from "react-native";
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar } from "expo-status-bar";
 import { useDispatch, useSelector } from "react-redux";
 import Logo from "@/components/Logo";
-import { User, Lock, LogIn } from "lucide-react-native";
+import { User, Lock, LogIn, Eye, EyeOff } from "lucide-react-native"; // Added Eye, EyeOff
 import { useState, useEffect } from "react";
 import { loginUser } from "@/src/features/auth/authActions";
-import { RootState, AppDispatch } from "@/src/store/store"; // Ensure AppDispatch is exported from store
+import { RootState, AppDispatch } from "@/src/store/store";
 import { useRouter } from "expo-router";
 
 export default function Login() {
@@ -22,13 +23,12 @@ export default function Login() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // Added state
 
-  // Get loading and error state from Redux
   const { error, loading, user } = useSelector(
     (state: RootState) => state.auth,
   );
 
-  // if the user is already logged in, redirect to tabs
   useEffect(() => {
     if (user) {
       router.replace("/(tabs)");
@@ -40,25 +40,15 @@ export default function Login() {
       Alert.alert(
         "خطأ في الإدخال",
         "يرجى التأكد من إدخال إسم المستخدم وكلمة السر",
-        [
-          {
-            text: "حسناً",
-            style: "default",
-          },
-        ],
+        [{ text: "حسناً", style: "default" }],
       );
       return;
     }
 
-    // Dispatch the action. We use .unwrap() to handle the promise result directly
     try {
       await dispatch(loginUser({ username, password })).unwrap();
-      // If successful, the index.tsx or this component can redirect
       router.replace("/(tabs)");
-    } catch (err: any) {
-      // Error is already handled in the slice/action
-      
-    }
+    } catch (err: any) {}
   };
 
   return (
@@ -67,9 +57,9 @@ export default function Login() {
       contentContainerStyle={{ justifyContent: "center", flexGrow: 1 }}
       style={{ direction: "rtl" }}
     >
-      <View className="bg-white h-full w-full max-w-md mx-auto p-8 rounded-[40px] shadow-lg border border-slate-100">
-      <StatusBar style="dark" />
-        {/* Logo & Header */}
+      <View className="bg-white h-full w-full max-w-md mx-auto  px-8 py-20 rounded-[40px] shadow-lg border border-slate-100">
+        <StatusBar style="dark" />
+
         <View className="items-center mb-10">
           <Logo />
           <Text className="text-2xl font-black text-slate-800">
@@ -80,9 +70,7 @@ export default function Login() {
           </Text>
         </View>
 
-        {/* Form */}
         <View className="space-y-5">
-          {/* Error Message Display */}
           {error && (
             <View className="mb-4 bg-red-50 border border-red-200 p-3 rounded-xl">
               <Text className="text-red-600 text-center font-bold text-xs">
@@ -91,7 +79,6 @@ export default function Login() {
             </View>
           )}
 
-          {/* Username Input */}
           <View className="mt-4">
             <Text className="text-[10px] font-black text-slate-400 mr-2 uppercase tracking-wider">
               إسم المستخدم
@@ -113,7 +100,6 @@ export default function Login() {
             </View>
           </View>
 
-          {/* Password Input */}
           <View className="mt-4">
             <Text className="text-[10px] font-black text-slate-400 mr-2 uppercase tracking-wider">
               كلمة السر
@@ -124,18 +110,31 @@ export default function Login() {
                 onChangeText={setPassword}
                 placeholder="أدخل كلمة السر"
                 placeholderTextColor="#94a3b8"
-                secureTextEntry
-                className="w-full px-5 pr-12 py-3.5 rounded-xl border border-slate-200 font-bold text-sm text-right"
+                secureTextEntry={!showPassword} // Toggle secure text
+                className="w-full px-5 pr-12 pl-12 py-3.5 rounded-xl border border-slate-200 font-bold text-sm text-right"
               />
               <Lock
                 size={18}
                 color="#94a3b8"
                 style={{ position: "absolute", right: 15 }}
               />
+
+              {/* Added Eye Toggle Button */}
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                // This expands the touchable area by 20 pixels in every direction
+                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                className="absolute left-4"
+              >
+                {showPassword ? (
+                  <EyeOff size={20} color="#94a3b8" />
+                ) : (
+                  <Eye size={20} color="#94a3b8" />
+                )}
+              </TouchableOpacity>
             </View>
           </View>
 
-          {/* Login Button */}
           <View className="mt-6">
             <Pressable
               onPress={handleLogin}
@@ -158,7 +157,6 @@ export default function Login() {
           </View>
         </View>
 
-        {/* Footer */}
         <View className="mt-8 items-center">
           <Text className="text-[10px] text-slate-400 uppercase tracking-widest text-center">
             © 2026 DHAMAN PRO LOGISTICS{"\n"}جميع الحقوق محفوظة

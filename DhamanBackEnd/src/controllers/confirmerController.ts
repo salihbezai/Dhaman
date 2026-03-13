@@ -45,7 +45,7 @@ export const createOrder = async (req: Request, res: Response) => {
       (sum, item) => sum + item.priceAtTimeOfOrder * item.quantity,
       0,
     );
-
+    
     // 3. Create the order
     const newOrder = new Order({
       ...orderData,

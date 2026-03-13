@@ -622,6 +622,7 @@ export default function SupervisorDashboard() {
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
+                  hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
                   className="absolute left-4 top-4"
                 >
                   {showPassword ? (

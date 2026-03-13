@@ -611,7 +611,7 @@ const ConfirmerDashboard = () => {
         <View className="flex-1 bg-black/60 justify-center p-4">
           <View className="bg-white rounded-[2.5rem] p-6 shadow-xl max-h-[90%]">
             <Text className="text-slate-900 text-xl font-black  mb-4">
-              تعديل بيانات الطلب
+              إضافة طلبية 
             </Text>
 
             <ScrollView showsVerticalScrollIndicator={false}>
