@@ -50,7 +50,7 @@ export const createOrder = async (req: Request, res: Response) => {
     const newOrder = new Order({
       ...orderData,
       items: processedItems,
-      totalAmount,
+      totalAmount: totalAmount+orderData.deliveryPrice,
       confirmerId: req.user?.id,
     });
 

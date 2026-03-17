@@ -25,3 +25,5 @@ export const ORDER_STATUS_LABELS_AR: Record<OrderStatusKey, string> = {
   RETURNED: "تم الاسترجاع",
   EXCHANGED: "تم التبديل",
 };
+
+export const TAX_RATE = 0.1; 

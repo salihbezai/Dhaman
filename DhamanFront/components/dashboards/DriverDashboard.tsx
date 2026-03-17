@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Alert,
   Linking,
   RefreshControl,
+  Modal,
 } from "react-native";
 import {
   Truck,
@@ -21,6 +22,8 @@ import {
   RefreshCw,
   RotateCcw,
   Package,
+  Calendar,
+  ChevronDown,
 } from "lucide-react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/src/store/store";
@@ -33,7 +36,10 @@ import {
   sendArrivalNotification, 
   updateOrderStatusByDriver 
 } from "@/src/features/orders/orderActions";
-import { ORDER_STATUS_LABELS_AR, OrderStatusKey } from "@/src/utils/utility";
+import { ORDER_STATUS_LABELS_AR, OrderStatusKey, TAX_RATE } from "@/src/utils/utility";
+
+// Define the filter types
+type FilterPeriod = "today" | "lastMonth" | "lastSixMonths" | "lastYear";
 
 export default function DriverDashboard() {
   const { user: driver } = useSelector((state: RootState) => state.auth);
@@ -44,6 +50,10 @@ export default function DriverDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "history">("active");
+  
+  // New States for Filtering
+  const [period, setPeriod] = useState<FilterPeriod>("today");
+  const [isFilterModalVisible, setFilterModalVisible] = useState(false);
 
   useEffect(() => {
     fetchDriverorders();
@@ -67,6 +77,42 @@ export default function DriverDashboard() {
     setRefreshing(false);
   };
 
+  // --- EARNINGS CALCULATION LOGIC ---
+  const earnings = useMemo(() => {
+    const now = new Date();
+    
+    return orders
+      .filter((order: any) => {
+        if (order.status !== "DELIVERED") return false;
+        
+        const orderDate = new Date(order.updatedAt || order.createdAt);
+        
+        switch (period) {
+          case "today":
+            return orderDate.toDateString() === now.toDateString();
+          case "lastMonth":
+            const monthAgo = new Date();
+            monthAgo.setMonth(now.getMonth() - 1);
+            return orderDate >= monthAgo;
+          case "lastSixMonths":
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(now.getMonth() - 6);
+            return orderDate >= sixMonthsAgo;
+          case "lastYear":
+            const yearAgo = new Date();
+            yearAgo.setFullYear(now.getFullYear() - 1);
+            return orderDate >= yearAgo;
+          default:
+            return false;
+        }
+      })
+      .reduce((acc: number, curr: any) => {
+        const deliveryPrice = curr.deliveryPrice || 0;
+        const driverShare = deliveryPrice * (1 - TAX_RATE);
+        return acc + driverShare;
+      }, 0);
+  }, [orders, period]);
+
   const activeOrders = orders.filter((o: any) => 
     ["CONFIRMED", "OUT_FOR_DELIVERY", "POSTPONED"].includes(o.status)
   );
@@ -76,6 +122,15 @@ export default function DriverDashboard() {
   );
 
   const displayedOrders = activeTab === "active" ? activeOrders : historyOrders;
+
+  const getPeriodLabel = (p: FilterPeriod) => {
+    switch(p) {
+      case "today": return "اليوم";
+      case "lastMonth": return "آخر شهر ";
+      case "lastSixMonths": return "آخر 6 أشهر";
+      case "lastYear": return "آخر سنة";
+    }
+  };
 
   const handleUpdateStatus = (orderId: string, newStatus: string) => {
     const statusLabel = ORDER_STATUS_LABELS_AR[newStatus as OrderStatusKey] || newStatus;
@@ -124,7 +179,7 @@ export default function DriverDashboard() {
 
   const openInMaps = (address: string, wilaya: string) => {
     const query = encodeURIComponent(`${address}, ${wilaya}, Algeria`);
-    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
+    Linking.openURL(`http://maps.google.com/?q=${query}`);
   };
 
   return (
@@ -163,19 +218,41 @@ export default function DriverDashboard() {
           </TouchableOpacity>
         </View>
 
-        <View className="bg-slate-900 p-5 rounded-3xl flex-row-reverse justify-between items-center shadow-inner">
-          <View className="items-end">
-            <Text className="text-[10px] font-black text-slate-400 uppercase">
-              {activeTab === "active" ? "المهام الجارية" : "الإجمالي"}
-            </Text>
-            <Text className="text-2xl font-black text-amber-400">{displayedOrders.length}</Text>
+        {/* --- EARNINGS CARD --- */}
+        <View className="bg-slate-900 p-5 rounded-3xl shadow-inner mb-4">
+          <View className="flex-row-reverse justify-between items-center mb-3">
+            <View className="items-end">
+              <Text className="text-[10px] font-black text-slate-400 uppercase">
+                أرباحك ({getPeriodLabel(period)})
+              </Text>
+              <Text className="text-2xl font-black text-emerald-400">
+                {earnings.toLocaleString()} <Text className="text-xs">دج</Text>
+              </Text>
+            </View>
+            <TouchableOpacity 
+              onPress={() => setFilterModalVisible(true)}
+              className="bg-white/10 px-3 py-2 rounded-xl flex-row-reverse items-center gap-2 border border-white/5"
+            >
+              <Calendar size={14} color="#fbbf24" />
+              <Text className="text-white font-bold text-[10px]">{getPeriodLabel(period)}</Text>
+              <ChevronDown size={14} color="white" />
+            </TouchableOpacity>
           </View>
-          <View className="bg-white/10 p-3 rounded-2xl">
-            {activeTab === "active" ? <Truck size={28} color="#fbbf24" /> : <CheckCircle2 size={28} color="#fbbf24" />}
+          
+          <View className="h-[1px] bg-white/5 w-full mb-3" />
+          
+          <View className="flex-row-reverse justify-between items-center">
+             <View className="items-end">
+                <Text className="text-[10px] font-black text-slate-400 uppercase">المهام النشطة</Text>
+                <Text className="text-xl font-black text-amber-400">{activeOrders.length}</Text>
+             </View>
+             <View className="bg-white/10 p-2 rounded-xl">
+               <Truck size={20} color="#fbbf24" />
+             </View>
           </View>
         </View>
 
-        <View className="flex-row-reverse mt-4 bg-slate-900/10 p-1 rounded-2xl">
+        <View className="flex-row-reverse bg-slate-900/10 p-1 rounded-2xl">
           <TouchableOpacity 
             onPress={() => setActiveTab("active")}
             className={`flex-1 py-2 rounded-xl items-center ${activeTab === "active" ? "bg-slate-900" : ""}`}
@@ -226,15 +303,13 @@ export default function DriverDashboard() {
                   </View>
                 </View>
 
-                {/* --- UPDATED PRICE DISPLAY --- */}
                 <View className="bg-slate-50 p-3 rounded-2xl items-center border border-slate-100 min-w-[100px]">
                   <Text className="text-sm font-black text-slate-900">{order.totalAmount} دج</Text>
                   <Text className="text-[8px] font-bold text-slate-400 uppercase">المجموع الكلي</Text>
                   
-                  {/* Shipping Fee Note */}
                   <View className="mt-1 pt-1 border-t border-slate-200 w-full items-center">
                     <Text className="text-[8px] font-black text-emerald-600">
-                      التوصيل: {order.deliveryPrice || 0} دج
+                      حقوقك: {order.deliveryPrice * (1 - TAX_RATE)} دج
                     </Text>
                   </View>
                 </View>
@@ -279,6 +354,40 @@ export default function DriverDashboard() {
         )}
         <View className="h-10" />
       </ScrollView>
+
+      {/* --- FILTER MODAL --- */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isFilterModalVisible}
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <TouchableOpacity 
+          activeOpacity={1} 
+          onPress={() => setFilterModalVisible(false)}
+          className="flex-1 bg-black/50 justify-end"
+        >
+          <View className="bg-white rounded-t-[40px] p-8">
+            <Text className="text-right font-black text-lg mb-6 text-slate-900">اختر الفترة</Text>
+            
+            {(["today", "lastMonth", "lastSixMonths", "lastYear"] as FilterPeriod[]).map((p) => (
+              <TouchableOpacity
+                key={p}
+                onPress={() => {
+                  setPeriod(p);
+                  setFilterModalVisible(false);
+                }}
+                className={`mb-3 p-5 rounded-2xl flex-row-reverse justify-between items-center ${period === p ? "bg-amber-500" : "bg-slate-50"}`}
+              >
+                <Text className={`font-black ${period === p ? "text-white" : "text-slate-600"}`}>
+                  {getPeriodLabel(p)}
+                </Text>
+                {period === p && <CheckCircle2 size={20} color="white" />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }

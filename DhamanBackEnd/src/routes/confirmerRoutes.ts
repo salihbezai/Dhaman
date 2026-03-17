@@ -17,7 +17,7 @@ const router = Router();
 
 router.get('/orders',protect, confirmerOnly,getConfirmerOrders);
 
-router.post('/orders',createOrder);
+router.post('/orders',protect, confirmerOnly,createOrder);
 
 router.put('/orders/:id',updateOrder);
 router.put('/orders/:id/no-answer',protect, confirmerOnly,handleNoAnswer);

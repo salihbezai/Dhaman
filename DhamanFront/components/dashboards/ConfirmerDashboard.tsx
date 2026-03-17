@@ -58,7 +58,6 @@ const ConfirmerDashboard = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [showWilayaPicker, setShowWilayaPicker] = useState(false);
-  // Filter logic (Optional: if you want to search through wilayas)
   const [wilayaSearch, setWilayaSearch] = useState("");
   const filteredWilayas = WILAYAS.filter(
     (w) =>
@@ -69,14 +68,15 @@ const ConfirmerDashboard = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [viewingOrder, setViewingOrder] = useState<any>(null);
   const [showProductPicker, setShowProductPicker] = useState(false);
-  // Updated formData to handle array of items
+  
   const [formData, setFormData] = useState({
     _id: "",
-    customerName: "hani",
-    customerPhone: "0987654321",
-    totalAmount: 200,
+    customerName: "",
+    customerPhone: "",
+    totalAmount: 0,
     wilaya: "باتنة",
     address: "حي الرياض",
+    deliveryPrice: 0,
     items: [] as any[],
   });
 
@@ -94,14 +94,21 @@ const ConfirmerDashboard = () => {
     await dispatch(getProducts());
   };
 
-  const calculateTotal = (items: any[]) => {
-    return items.reduce(
+  // --- LOGIC: Calculation including full delivery for client ---
+  const calculateTotal = (items: any[], currentWilayaArName: string) => {
+    const productsTotal = items.reduce(
       (sum, item) => sum + item.priceAtTimeOfOrder * item.quantity,
       0,
     );
+
+    const selectedWilaya = WILAYAS.find(w => w.ar_name === currentWilayaArName);
+    const deliveryPrice = selectedWilaya ? parseInt(selectedWilaya.deliveryPrice) : 0;
+    
+    // The client pays the full delivery price. 
+    // You handle the 10% (us) / 90% (driver) split on the backend or in reports.
+    return productsTotal + deliveryPrice;
   };
 
-  // --- Validation Logic ---
   const validateForm = () => {
     if (!formData.customerName.trim()) {
       Alert.alert("خطأ", "يرجى إدخال إسم الزبون");
@@ -125,6 +132,7 @@ const ConfirmerDashboard = () => {
     }
     return true;
   };
+
   const addProductToOrder = (product: any) => {
     const existingItem = formData.items.find(
       (item) => item.productId === product._id,
@@ -146,32 +154,25 @@ const ConfirmerDashboard = () => {
     setFormData({
       ...formData,
       items: updatedItems,
-      totalAmount: calculateTotal(updatedItems),
+      totalAmount: calculateTotal(updatedItems, formData.wilaya),
     });
     setShowProductPicker(false);
   };
 
   const updateQuantity = (index: number, delta: number) => {
-    // 1. Create a shallow copy of the items array
     const newItems = [...formData.items];
-
-    // 2. Create a NEW object for the specific item (breaks the "read-only" link)
     const updatedItem = {
       ...newItems[index],
       quantity: Math.max(1, newItems[index].quantity + delta),
     };
 
-    // 3. Put the new object back into our new array
     newItems[index] = updatedItem;
 
-    // 4. Update the state
     setFormData({
       ...formData,
       items: newItems,
-      totalAmount: calculateTotal(newItems),
+      totalAmount: calculateTotal(newItems, formData.wilaya),
     });
-
-    console.log("Updated Qty:", newItems[index].quantity);
   };
 
   const removeItem = (index: number) => {
@@ -179,11 +180,9 @@ const ConfirmerDashboard = () => {
     setFormData({
       ...formData,
       items: newItems,
-      totalAmount: calculateTotal(newItems),
+      totalAmount: calculateTotal(newItems, formData.wilaya),
     });
   };
-
-  // --- Actions ---
 
   const handleConfirmOrder = (id: string) => {
     Alert.alert("تأكيد", "تأكيد الطلب؟", [
@@ -248,24 +247,19 @@ const ConfirmerDashboard = () => {
 
   const handleSaveOrder = async () => {
     if (!validateForm()) return;
-      const  {_id, ...newOrderData} = formData;
+    const {_id, ...newOrderData} = formData;
 
     const isEditing = formData._id && formData._id !== "";
     const payload = isEditing ? formData : newOrderData;
 
     if (isEditing) {
-      // --- Case: Editing existing order ---
       const result = await dispatch(updateOrderByConfirmer({ formData }));
       if (result.meta.requestStatus === "fulfilled") {
         setShowForm(false);
         Alert.alert("تحديث", "تم تعديل بيانات الطلبية بنجاح");
       }
     } else {
-      // --- Case: Adding NEW order ---
-      // Make sure you have an action named handleAddOrder or similar in your Redux
-        const result = await dispatch(handleAddOrder({ formData: payload}));
-
-      console.log("the formdata " + JSON.stringify(formData));
+      const result = await dispatch(handleAddOrder({ formData: payload}));
       if (result.meta.requestStatus === "fulfilled") {
         setShowForm(false);
         Alert.alert("نجاح", "تم إضافة الطلبية الجديدة بنجاح");
@@ -284,6 +278,7 @@ const ConfirmerDashboard = () => {
       },
     ]);
   };
+
   return (
     <View className="flex-1 bg-slate-50" style={{ direction: "rtl" }}>
       <StatusBar style="light" />
@@ -293,14 +288,16 @@ const ConfirmerDashboard = () => {
         <View className="flex-row-reverse justify-between items-center mb-8">
           <TouchableOpacity
             onPress={() => {
+              const defaultWilaya = WILAYAS.find(w => w.ar_name === "باتنة");
               setEditingOrder(null);
               setFormData({
                 _id: "",
-                customerName: "هاني",
-                customerPhone: "0987654321",
+                customerName: "",
+                customerPhone: "",
                 totalAmount: 0,
                 wilaya: "باتنة",
                 address: "حي الرياض",
+                deliveryPrice: parseInt(defaultWilaya?.deliveryPrice || "0"),
                 items: [],
               });
               setShowForm(true);
@@ -502,11 +499,6 @@ const ConfirmerDashboard = () => {
                       <XCircle size={14} color="white" />
                     </TouchableOpacity>
                   </View>
-                  {loading && (
-                    <View className="flex-row justify-center items-center mt-6">
-                      <ActivityIndicator size="small" color="blue" />
-                    </View>
-                  )}
                   <View className="mt-5 pt-4 border-t border-slate-50 flex-row justify-between items-center">
                     <TouchableOpacity onPress={() => handleRemoveOrder(order)}>
                       <Trash2 size={18} color="#fca5a5" />
@@ -521,7 +513,8 @@ const ConfirmerDashboard = () => {
                           totalAmount: order.totalAmount,
                           wilaya: order.wilaya,
                           address: order.address,
-                          items: [...order.items], // Load existing products
+                          deliveryPrice: order.deliveryPrice,
+                          items: [...order.items],
                         });
                         setShowForm(true);
                       }}
@@ -547,7 +540,7 @@ const ConfirmerDashboard = () => {
         <View className="flex-1 justify-end bg-black/40">
           <View className="bg-white rounded-t-[3rem] p-8 shadow-2xl">
             <View className="w-12 h-1.5 bg-slate-200 rounded-full self-center mb-6" />
-            <Text className="text-slate-900 text-xl font-black  mb-6">
+            <Text className="text-slate-900 text-xl font-black mb-6">
               تفاصيل الطلبية
             </Text>
 
@@ -569,7 +562,7 @@ const ConfirmerDashboard = () => {
                       <Text className="text-red-600">x{item.quantity}</Text>
                     </Text>
                   </View>
-                  <Text className="text-slate-700 font-bold text-[16px] flex-1  ml-2">
+                  <Text className="text-slate-700 font-bold text-[16px] flex-1 ml-2">
                     {item.productName}
                   </Text>
                 </View>
@@ -601,7 +594,7 @@ const ConfirmerDashboard = () => {
         </View>
       </Modal>
 
-      {/* --- NEW: Edit Form Modal --- */}
+      {/* --- Edit Form Modal --- */}
       <Modal
         visible={showForm}
         animationType="fade"
@@ -610,24 +603,23 @@ const ConfirmerDashboard = () => {
       >
         <View className="flex-1 bg-black/60 justify-center p-4">
           <View className="bg-white rounded-[2.5rem] p-6 shadow-xl max-h-[90%]">
-            <Text className="text-slate-900 text-xl font-black  mb-4">
-              إضافة طلبية 
+            <Text className="text-slate-900 text-xl font-black mb-4">
+              {formData._id ? "تعديل طلبية" : "إضافة طلبية"}
             </Text>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Customer Inputs */}
-              <Text className="text-slate-400 font-bold  mb-1">إسم الزبون</Text>
+              <Text className="text-slate-400 font-bold mb-1">إسم الزبون</Text>
               <TextInput
-                className="bg-slate-50 border border-slate-100 rounded-xl p-3 mb-3  font-bold"
+                className="bg-slate-50 border border-slate-100 rounded-xl p-3 mb-3 font-bold"
                 value={formData.customerName}
                 onChangeText={(t) =>
                   setFormData({ ...formData, customerName: t })
                 }
               />
 
-              <Text className="text-slate-400 font-bold  mb-1">رقم الهاتف</Text>
+              <Text className="text-slate-400 font-bold mb-1">رقم الهاتف</Text>
               <TextInput
-                className="bg-slate-50 border border-slate-100 rounded-xl p-3 mb-3  font-bold"
+                className="bg-slate-50 border border-slate-100 rounded-xl p-3 mb-3 font-bold"
                 keyboardType="phone-pad"
                 value={formData.customerPhone}
                 onChangeText={(t) =>
@@ -635,7 +627,7 @@ const ConfirmerDashboard = () => {
                 }
               />
 
-                 <Text className="text-slate-400 font-bold mb-1">الولاية</Text>
+              <Text className="text-slate-400 font-bold mb-1">الولاية</Text>
               <TouchableOpacity
                 onPress={() => setShowWilayaPicker(true)}
                 className="bg-slate-50 border border-slate-100 rounded-xl p-4 mb-3 flex-row-reverse justify-between items-center"
@@ -646,24 +638,30 @@ const ConfirmerDashboard = () => {
                 </Text>
               </TouchableOpacity>
 
-    <Text className="text-slate-400 font-bold  mb-1">العنوان</Text>
+              <Text className="text-slate-400 font-bold mb-1">العنوان</Text>
               <TextInput
-                className="bg-slate-50 border border-slate-100 rounded-xl p-3 mb-3  font-bold"
+                className="bg-slate-50 border border-slate-100 rounded-xl p-3 mb-3 font-bold"
                 multiline
                 value={formData.address}
                 onChangeText={(t) => setFormData({ ...formData, address: t })}
               />
-              {/* Product Section */}
+              <Text className="text-slate-400 font-bold mb-1">حقوق التوصيل</Text>
+              <TextInput
+                className="bg-slate-50 border border-slate-100 rounded-xl p-3 mb-3 font-bold"
+                editable={false}
+                value={formData.deliveryPrice.toString()}
+              />
+
               <View className="border-t border-slate-100 mt-2 pt-4">
-                <Text className="text-slate-800 font-black  mb-3">
-               المنتجات:
+                <Text className="text-slate-800 font-black mb-3">
+                  المنتجات:
                 </Text>
                 {formData.items.map((item, idx) => (
                   <View
                     key={idx}
                     className="bg-slate-50 border border-slate-200 rounded-2xl p-3 mb-3"
                   >
-                    <Text className="text-slate-700 font-bold  mb-2">
+                    <Text className="text-slate-700 font-bold mb-2">
                       {item.productName}
                     </Text>
                     <View className="flex-row justify-between items-center">
@@ -690,21 +688,19 @@ const ConfirmerDashboard = () => {
                   </View>
                 ))}
               </View>
-           
-          
 
               <View className="bg-red-50 p-4 rounded-xl mt-2 items-center">
                 <Text className="text-red-600 font-black text-lg">
                   {formData.totalAmount} دج
                 </Text>
                 <Text className="text-red-400 text-[10px] font-bold">
-                  المجموع الجديد
+                  المجموع (بما في ذلك التوصيل)
                 </Text>
               </View>
-              {/* Add Product Button inside the ScrollView of the Edit/Add Modal */}
+
               <TouchableOpacity
                 onPress={() => setShowProductPicker(true)}
-                className="flex-row items-center justify-center bg-emerald-50 border border-emerald-200 border-dashed py-3 rounded-xl mb-4"
+                className="flex-row items-center justify-center bg-emerald-50 border border-emerald-200 border-dashed py-3 rounded-xl mt-4 mb-4"
               >
                 <Plus size={18} color="#10b981" />
                 <Text className="text-emerald-700 font-black mr-2">
@@ -712,7 +708,6 @@ const ConfirmerDashboard = () => {
                 </Text>
               </TouchableOpacity>
 
-              {/* Product Picker Modal */}
               <Modal
                 visible={showProductPicker}
                 animationType="slide"
@@ -779,7 +774,6 @@ const ConfirmerDashboard = () => {
               <Text className="text-xl font-black">اختر الولاية</Text>
             </View>
 
-            {/* Search Input for Wilayas */}
             <TextInput
               placeholder="بحث عن ولاية..."
               className="bg-slate-100 p-4 rounded-2xl mb-4 text-right font-bold"
@@ -793,9 +787,16 @@ const ConfirmerDashboard = () => {
                   <TouchableOpacity
                     key={wilaya.code}
                     onPress={() => {
-                      setFormData({ ...formData, wilaya: wilaya.ar_name });
+                      const newTotal = calculateTotal(formData.items, wilaya.ar_name);
+                      setFormData({ 
+                        ...formData, 
+                        wilaya: wilaya.ar_name,
+                        // Update: Client pays the original price
+                        deliveryPrice: parseInt(wilaya.deliveryPrice || "0"),
+                        totalAmount: newTotal 
+                      });
                       setShowWilayaPicker(false);
-                      setWilayaSearch(""); // Reset search
+                      setWilayaSearch(""); 
                     }}
                     className={`w-[48%] p-4 mb-3 rounded-2xl border ${
                       formData.wilaya === wilaya.ar_name
@@ -811,6 +812,9 @@ const ConfirmerDashboard = () => {
                       }`}
                     >
                       {wilaya.code} - {wilaya.ar_name}
+                    </Text>
+                    <Text className="text-center text-[10px] text-slate-400">
+                      التوصيل: {wilaya.deliveryPrice} دج
                     </Text>
                   </TouchableOpacity>
                 ))}
