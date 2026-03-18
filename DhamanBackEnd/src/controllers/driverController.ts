@@ -86,3 +86,36 @@ export const markArrival = async (req: Request, res: Response) => {
       });
   }
 };
+
+
+// Accept order by driver
+export const acceptOrderByDriver = async (req: Request, res: Response) => {
+  try {
+
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { driverId: req.user?.id },
+      { new: true },
+    );
+    if(!order)
+      return res
+        .status(404)
+        .json({ message: { en: "Order not found", ar: "الطلبية غير موجودة" } });
+    // check if the order already has a driver
+    if (order.driverId) {
+      return res
+        .status(400)
+        .json({ message: { en: "Order already has a driver", ar: "تم تعيين سائق لهذه الطلبية" } });
+    }
+
+    
+    res.status(200).json({order});
+  } catch (err) {
+
+    res
+      .status(400)
+      .json({
+        message: { en: "Failed to accept order", ar: "فشل في قبول الطلب" },
+      });
+  }
+}

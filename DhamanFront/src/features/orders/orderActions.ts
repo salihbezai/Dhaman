@@ -194,3 +194,18 @@ export const getDriverOrders = createAsyncThunk<
     return rejectWithValue(getErrorMessage(err));
   }
 });
+
+// accept order by driver
+export const acceptOrderByDriver = createAsyncThunk<
+  Order,
+  { id: string },
+  { rejectValue: string }
+>("orders/acceptOrderByDriver", async ({ id }, { rejectWithValue }) => {
+  try {
+    console.log("the id we sent "+id)
+    const { data } = await api.put(`/driver/orders/${id}/accept`);
+    return data.order;
+  } catch (err) {
+    return rejectWithValue(getErrorMessage(err));
+  }
+});

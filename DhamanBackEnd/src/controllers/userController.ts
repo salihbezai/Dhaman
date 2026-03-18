@@ -16,6 +16,7 @@ interface NewUserRequestBody {
   password: string;
   phone: string;
   role: UserRole;
+  wilaya: string;
 }
 
 export interface JWTPayload {
@@ -30,15 +31,17 @@ interface NewUserResponseBody {
   phone: string;
   profileImageUrl?: string;
   role: UserRole;
+  wilaya: string;
+  isActive: boolean;
 }
 
 export const addNewUser = async (req: Request, res: Response) => {
-  const { username, email, password, phone, role } = req.body
+  const { username, email, password, phone, role, wilaya } = req.body
     .formdata as NewUserRequestBody;
   console.log("the body is " + JSON.stringify(req.body));
 
   // validate required fields
-  if (!username || !email || !password || !phone || !role) {
+  if (!username || !email || !password || !phone || !role || !wilaya) {
     return res.status(400).json({
       message: {
         en: "All fields (username, email, password, phone, role) are required.",
@@ -70,6 +73,7 @@ export const addNewUser = async (req: Request, res: Response) => {
       phone,
       profileImageUrl: `https://res.cloudinary.com/ddosc8sso/image/upload/v1772004959/profile_b9wucv.jpg`,
       role,
+      wilaya
     });
 
     await newUser.save();
@@ -82,6 +86,8 @@ export const addNewUser = async (req: Request, res: Response) => {
       phone: newUser.phone,
       profileImageUrl: newUser.profileImageUrl,
       role: newUser.role,
+      isActive: newUser.isActive,
+      wilaya: newUser.wilaya
     };
 
     res.status(201).json({ user });
@@ -176,7 +182,6 @@ export const setUserActif = async (req: Request, res: Response) => {
 export const updateMemberInfo = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { username, email, phone, role } = req.body;
-
   try {
     const user = await User.findById(id).select("-password -refreshTokens");
     if (!user) {
@@ -196,6 +201,7 @@ export const updateMemberInfo = async (req: Request, res: Response) => {
 
     res.status(200).json({ user });
   } catch (error) {
+    console.log("the error "+error)
     const err = error as Error;
     logger.error({
       message: "Error during updating user info",

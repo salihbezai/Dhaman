@@ -3,7 +3,8 @@ import { protect } from '../middlewares/authMiddleware';
 import { 
   getDriverOrders, 
   updateOrderStatus, 
-  markArrival 
+  markArrival, 
+  acceptOrderByDriver
 } from '../controllers/driverController';
 
 const router = Router();
@@ -16,5 +17,8 @@ router.put('/orders/:id/status', protect, updateOrderStatus);
 
 // Mark as arrived (Arrival Alert)
 router.put('/orders/:id/arrive', protect, markArrival);
+
+// Mark order accepted and assign it to the driver
+router.put('/orders/:id/accept', protect, acceptOrderByDriver);
 
 export default router;

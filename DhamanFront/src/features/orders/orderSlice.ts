@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getDriverOrders, getOrders, handleAddOrder, handleCancelOrder, handleConfirmTheOrder, handleNoAnswerOrder, handlePostponeOrder, handleRemoveOrderByConfirmer, sendArrivalNotification, updateOrderByConfirmer, updateOrderStatusByDriver } from "./orderActions";
+import { acceptOrderByDriver, getDriverOrders, getOrders, handleAddOrder, handleCancelOrder, handleConfirmTheOrder, handleNoAnswerOrder, handlePostponeOrder, handleRemoveOrderByConfirmer, sendArrivalNotification, updateOrderByConfirmer, updateOrderStatusByDriver } from "./orderActions";
 
 export interface Order {
     _id: string;
@@ -250,6 +250,20 @@ const orderSlice = createSlice({
         }
       })
       .addCase(sendArrivalNotification.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "خطاء في تاكيد الطلب";
+      })
+      .addCase(acceptOrderByDriver.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(acceptOrderByDriver.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        // make it on top of the list
+        state.orders.unshift(action.payload);
+      })
+      .addCase(acceptOrderByDriver.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "خطاء في تاكيد الطلب";
       })

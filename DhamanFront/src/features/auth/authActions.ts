@@ -12,6 +12,7 @@ interface LoginResponse {
     profileImageUrl?: string;
     phone: string;
     role: string;
+    wilaya: string;
   };
   token: string;
   refreshToken: string;

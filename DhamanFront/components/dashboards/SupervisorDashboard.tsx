@@ -29,6 +29,7 @@ import {
   Trash2,
   UserX,
   UserPlus,
+  XCircle,
 } from "lucide-react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/src/store/store";
@@ -47,6 +48,7 @@ import {
   OrderStatusKey,
   ROLE_LABELS_AR,
 } from "@/src/utils/utility";
+import { WILAYAS } from "@/src/utils/wilayas";
 
 export default function SupervisorDashboard() {
   const { user: supervisor } = useSelector((state: RootState) => state.auth);
@@ -65,7 +67,13 @@ export default function SupervisorDashboard() {
   const [showPassword, setShowPassword] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
   const [showEditRolePicker, setShowEditRolePicker] = useState(false);
-
+  const [showWilayaPicker, setShowWilayaPicker] = useState(false);
+  const [wilayaSearch, setWilayaSearch] = useState("");
+  const filteredWilayas = WILAYAS.filter(
+    (w) =>
+      w.ar_name.includes(wilayaSearch) ||
+      w.code.toString().includes(wilayaSearch),
+  );
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -73,6 +81,7 @@ export default function SupervisorDashboard() {
     confirmPassword: "",
     phone: "",
     role: "" as keyof typeof ROLE_LABELS_AR | "",
+    wilaya: "",
   });
 
   useEffect(() => {
@@ -113,7 +122,7 @@ export default function SupervisorDashboard() {
   };
 
   const handleAddUser = async () => {
-    const { username, email, password, confirmPassword, phone, role } =
+    const { username, email, password, confirmPassword, phone, role, wilaya } =
       formData;
     if (
       !username ||
@@ -121,7 +130,8 @@ export default function SupervisorDashboard() {
       !password ||
       !confirmPassword ||
       !phone ||
-      !role
+      !role ||
+      !wilaya
     ) {
       Alert.alert("تنبيه", "يرجى ملء جميع الحقول المطلوبة");
       return;
@@ -140,6 +150,7 @@ export default function SupervisorDashboard() {
         confirmPassword: "",
         phone: "",
         role: "",
+        wilaya: "",
       });
       Alert.alert("نجاح", "تم إضافة الموظف بنجاح");
     } catch (err: any) {
@@ -184,7 +195,10 @@ export default function SupervisorDashboard() {
 
   const handleUpdateMember = async () => {
     try {
-       await dispatch(updateMember({ id: editingMember._id, memberInfo: editingMember })).unwrap();
+
+      await dispatch(
+        updateMember({ id: editingMember.id, memberInfo: editingMember }),
+      ).unwrap();
       setEditingMember(null);
       fetchData();
       Alert.alert("نجاح", "تم تحديث البيانات");
@@ -338,7 +352,9 @@ export default function SupervisorDashboard() {
                       className="w-12 h-12 rounded-full border-4 border-white shadow-xl"
                     />
 
-                    <View className={`absolute bottom-1 right-1 ${member.isActive ? "bg-green-500" : "bg-red-500"} w-4 h-4 rounded-full border-2 border-white`} />
+                    <View
+                      className={`absolute bottom-1 right-1 ${member.isActive ? "bg-green-500" : "bg-red-500"} w-4 h-4 rounded-full border-2 border-white`}
+                    />
                   </View>
                 </View>
                 <View className="flex-1 mr-4 items-end">
@@ -364,24 +380,21 @@ export default function SupervisorDashboard() {
                   >
                     <Pencil size={18} color="#3b82f6" />
                   </TouchableOpacity>
-                  {
-                    member.isActive ?
-                    (<TouchableOpacity
+                  {member.isActive ? (
+                    <TouchableOpacity
                       onPress={() => handleDesactivateUser(member._id)}
                       className="p-2"
                     >
                       <UserX size={18} color="#ef4444" />
                     </TouchableOpacity>
-                    )
-                    :
-                    (<TouchableOpacity
+                  ) : (
+                    <TouchableOpacity
                       onPress={() => handleActivateUser(member._id)}
                       className="p-2"
                     >
                       <UserPlus size={18} color="#10b981" />
-                    </TouchableOpacity>)
-                  }
-      
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             ))}
@@ -585,6 +598,63 @@ export default function SupervisorDashboard() {
         </View>
       </Modal>
 
+      {/* Wilaya Picker Modal */}
+      <Modal visible={showWilayaPicker} animationType="slide" transparent>
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-white rounded-t-[3rem] h-[80%] p-6">
+            <View className="flex-row-reverse justify-between items-center mb-4">
+              <TouchableOpacity onPress={() => setShowWilayaPicker(false)}>
+                <XCircle size={24} color="#64748b" />
+              </TouchableOpacity>
+              <Text className="text-xl font-black">اختر الولاية</Text>
+            </View>
+
+            <TextInput
+              placeholder="بحث عن ولاية..."
+              className="bg-slate-100 p-4 rounded-2xl mb-4 text-right font-bold"
+              value={wilayaSearch}
+              onChangeText={setWilayaSearch}
+            />
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View className="flex-row flex-wrap justify-between">
+                {filteredWilayas.map((wilaya) => (
+                  <TouchableOpacity
+                    key={wilaya.code}
+                    onPress={() => {
+                      setFormData({
+                        ...formData,
+                        wilaya: wilaya.ar_name,
+                      });
+                      setShowWilayaPicker(false);
+                      setWilayaSearch("");
+                    }}
+                    className={`w-[48%] p-4 mb-3 rounded-2xl border ${
+                      formData.wilaya === wilaya.ar_name
+                        ? "bg-emerald-50 border-emerald-500"
+                        : "bg-slate-50 border-slate-100"
+                    }`}
+                  >
+                    <Text
+                      className={`text-center font-bold ${
+                        formData.wilaya === wilaya.ar_name
+                          ? "text-emerald-700"
+                          : "text-slate-700"
+                      }`}
+                    >
+                      {wilaya.code} - {wilaya.ar_name}
+                    </Text>
+                    <Text className="text-center text-[10px] text-slate-400">
+                      التوصيل: {wilaya.deliveryPrice} دج
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       {/* Add User Modal */}
       <Modal visible={showModal} animationType="slide" transparent={true}>
         <View className="flex-1 justify-end bg-black/50">
@@ -648,6 +718,19 @@ export default function SupervisorDashboard() {
                 className="bg-slate-50 p-4 rounded-2xl mb-3 font-bold text-right"
                 onChangeText={(t) => setFormData({ ...formData, phone: t })}
               />
+
+              <View className="relative mb-3">
+                <Text className="text-slate-400 font-bold mb-1">الولاية</Text>
+                <TouchableOpacity
+                  onPress={() => setShowWilayaPicker(true)}
+                  className="bg-slate-50 border border-slate-100 rounded-xl p-4 mb-3 flex-row-reverse justify-between items-center"
+                >
+                  <MapPin size={18} color="#64748b" />
+                  <Text className="font-bold text-slate-700">
+                    {formData.wilaya || "اختر الولاية"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
               {/* Custom Role Picker */}
               <TouchableOpacity

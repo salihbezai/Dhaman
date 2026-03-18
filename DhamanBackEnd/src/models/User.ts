@@ -19,6 +19,7 @@ interface IUser extends Document {
     longitude: number;
     updatedAt: Date;
   };
+  wilaya: string;
   isActive: boolean;
 }
 
@@ -42,6 +43,7 @@ const userSchema = new Schema<IUser>(
       longitude: Number,
       updatedAt: { type: Date, default: Date.now },
     },
+    wilaya: { type: String, required: true },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true },

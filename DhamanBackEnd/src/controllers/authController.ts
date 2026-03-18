@@ -16,6 +16,7 @@ interface RegisterRequestBody {
   password: string;
   phone: string;
   role: UserRole;
+  wilaya: string;
 }
 export interface UpdateRequestBody {
   id?: string;
@@ -38,14 +39,15 @@ interface RegisterResponse {
   phone: string;
   profileImageUrl?: string;
   role: UserRole;
+  wilaya: string;
 }
 
 export const register = async (req: Request, res: Response) => {
-  const { username, email, password, phone, role } =
+  const { username, email, password, phone, role, wilaya } =
     req.body as RegisterRequestBody;
 
   // validate required fields
-  if (!username || !email || !password || !phone || !role) {
+  if (!username || !email || !password || !phone || !role || !wilaya) {
     return res.status(400).json({
       message: {
         en: "All fields (username, email, password, phone, role) are required.",
@@ -77,6 +79,7 @@ export const register = async (req: Request, res: Response) => {
       phone,
       profileImageUrl: `https://res.cloudinary.com/ddosc8sso/image/upload/v1772004959/profile_b9wucv.jpg`,
       role,
+      wilaya,
     });
 
     const accessToken = generateAccessToken(
@@ -99,6 +102,7 @@ export const register = async (req: Request, res: Response) => {
       phone: newUser.phone,
       profileImageUrl: newUser.profileImageUrl,
       role: newUser.role,
+      wilaya: newUser.wilaya,
     };
     res.cookie("refreshToken", token, {
       httpOnly: true,
@@ -139,6 +143,7 @@ interface LoginResponse {
   phone: string;
   profileImageUrl?: string;
   role: UserRole.SUPERVISOR | UserRole.CONFIRMER | UserRole.DRIVER;
+  wilaya: string;
 }
 
 export const login = async (req: Request, res: Response) => {
@@ -195,6 +200,7 @@ export const login = async (req: Request, res: Response) => {
       phone: user.phone,
       profileImageUrl: user.profileImageUrl,
       role: user.role,
+      wilaya: user.wilaya,
     };
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -319,6 +325,7 @@ export const refresh = async (req: Request, res: Response) => {
         profileImageUrl: user.profileImageUrl,
         phone: user.phone,
         role: user.role,
+        wilaya: user.wilaya
       },
       token: accessToken,
       refreshToken: newRefreshToken,
@@ -354,6 +361,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
         profileImageUrl: user.profileImageUrl,
         phone: user.phone,
         role: user.role,
+        wilaya: user.wilaya
       },
     });
   } catch (error) {
@@ -395,6 +403,7 @@ export const updateUserProfile = async (req: Request, res: Response) => {
         profileImageUrl: user.profileImageUrl,
         phone: user.phone,
         role: user.role,
+        wilaya: user.wilaya
       },
     });
   } catch (error) {

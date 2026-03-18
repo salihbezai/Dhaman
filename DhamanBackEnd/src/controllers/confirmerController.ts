@@ -5,10 +5,18 @@ import mongoose from "mongoose";
 // 1. Get orders for Confirmer (New, No Answer, Postponed)
 export const getConfirmerOrders = async (req: Request, res: Response) => {
   try {
-    console.log("trying to get them");
-    const orders = await Order.find()
-      .populate("items.product", "name sku basePrice")
-      .sort({ createdAt: -1 });
+
+    // get orders by confirmerId
+    const confirmerId = req.user?.id;
+    if (!confirmerId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const orders = await Order.find({
+      confirmerId: confirmerId
+    }) 
+    .populate("items.product", "name sku basePrice")
+    .sort({ createdAt: -1 });
+
 
     res.status(200).json({ orders });
   } catch (err) {
@@ -126,18 +134,54 @@ export const handleNoAnswer = async (req: Request, res: Response) => {
 };
 
 // 4. Action: Confirm (Moves to Out for Delivery)
+// export const confirmOrder = async (req: Request, res: Response) => {
+//   const id = req.params.id as string;
+//   // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
+//   if (!mongoose.Types.ObjectId.isValid(id)) {
+//     return res.status(400).json({ message: "Invalid Order ID format" });
+//   }
+//   try {
+//     // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: "Invalid Order ID format" });
+//     }
+
+//     const order = await Order.findByIdAndUpdate(
+//       id,
+//       {
+//         $set: { status: OrderStatus.CONFIRMED },
+//         $push: {
+//           history: {
+//             status: OrderStatus.CONFIRMED,
+//             updatedAt: new Date(),
+//             updatedBy: new mongoose.Types.ObjectId(req.user?.id),
+//             note: "Order confirmed by confirmer",
+//           },
+//         },
+//       },
+//       { returnDocument: "after", runValidators: true },
+//     );
+
+//     if (!order) {
+//       return res.status(404).json({ message: "Order not found" });
+//     }
+
+//     return res.status(200).json({ order });
+//   } catch (err: any) {
+//     return res
+//       .status(500)
+//       .json({ message: "Internal Server Error", error: err.message });
+//   }
+// };
+
 export const confirmOrder = async (req: Request, res: Response) => {
   const id = req.params.id as string;
-  // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
+
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: "Invalid Order ID format" });
   }
-  try {
-    // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid Order ID format" });
-    }
 
+  try {
     const order = await Order.findByIdAndUpdate(
       id,
       {
@@ -158,6 +202,17 @@ export const confirmOrder = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+   
+    // 1. Grab the io instance from the app
+    const io = req.app.get("socketio");
+
+    // 2. Broadcast the popup data to the specific wilaya room
+    if (io) {
+      console.log("to the wilaya "+order.wilaya)
+      io.to(order.wilaya).emit("NEW_ORDER_POPUP",order);
+    }
+   
+
     return res.status(200).json({ order });
   } catch (err: any) {
     return res
@@ -165,7 +220,6 @@ export const confirmOrder = async (req: Request, res: Response) => {
       .json({ message: "Internal Server Error", error: err.message });
   }
 };
-
 export const handleCancelOrder = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;

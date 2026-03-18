@@ -9,6 +9,7 @@ export interface User {
   profileImageUrl?: string;
   phone: string;
   role: string;
+  wilaya: string;
 }
 
 interface AuthState {

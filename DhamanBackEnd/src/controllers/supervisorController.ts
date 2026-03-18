@@ -3,6 +3,7 @@ import { User, UserRole } from '../models/User';
 import { Order, OrderStatus } from '../models/Order';
 import bcrypt from "bcrypt";
 import { Product } from '../models/Product';
+import { logger } from '../utility';
 
 export const getTeam = async (req: Request, res: Response) => {
   const team = await User.find({ role: { $ne: UserRole.SUPERVISOR } })
@@ -13,11 +14,30 @@ export const getTeam = async (req: Request, res: Response) => {
 
 export const createUser = async (req: Request, res: Response) => {
   const { username, email, password, phone, role } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
+  try {
+      const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = await User.create({
     username, email, password: hashedPassword, phone, role, isActive: true
   });
   res.status(201).json(newUser);
+  } catch (error) {
+    const err = error as Error;
+    logger.error({
+      message: "Error during creating user",
+      error: err.message,
+      stack: err.stack,
+      route: req.originalUrl,
+    });
+    res
+      .status(500)
+      .json({
+        message: {
+          en: "Server error during user creation.",
+          ar: "خطأ في الخادم أثناء انشاء المستخدم.",
+        },
+      });
+  }
+
 };
 
 export const deleteUser = async (req: Request, res: Response) => {
