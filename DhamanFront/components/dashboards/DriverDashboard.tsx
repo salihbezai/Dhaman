@@ -46,11 +46,11 @@ import {
   TAX_RATE,
 } from "@/src/utils/utility";
 import { io, Socket } from "socket.io-client"; // 1. Added Socket Import
-import api from "@/src/api/axios";
 
 type FilterPeriod = "today" | "lastMonth" | "lastSixMonths" | "lastYear";
 
 export default function DriverDashboard() {
+  const socket: Socket = io(process.env.EXPO_PUBLIC_API_BASE_URL);
   const { user: driver } = useSelector((state: RootState) => state.auth);
   const { orders } = useSelector((state: RootState) => state.orders);
   const dispatch = useDispatch<AppDispatch>();
@@ -84,10 +84,7 @@ export default function DriverDashboard() {
 
   // --- SOCKET CONNECTION LOGIC ---
   useEffect(() => {
-   
     if (!driver?.wilaya) return;
-
-    const socket: Socket = io(process.env.EXPO_PUBLIC_API_BASE_URL);
 
     socket.emit("join_wilaya", driver.wilaya);
 
@@ -97,7 +94,6 @@ export default function DriverDashboard() {
       setShowIncomingModal(true);
     });
 
- 
     return () => {
       socket.disconnect();
     };
@@ -137,12 +133,14 @@ export default function DriverDashboard() {
       Alert.alert("مبروك!", "لقد تم قبول الطلبية بنجاح");
     } catch (err) {
       console.log("the error " + err);
-      Alert.alert("للأسف", "قام سائق آخر بقبول هذه الطلبية قبلك");
+      //Alert.alert("للأسف", "قام سائق آخر بقبول هذه الطلبية قبلك");
+      Alert.alert(" the error is " + err);
       setShowIncomingModal(false);
     } finally {
       setIsAccepting(false);
     }
   };
+  console.log("the orders " + JSON.stringify(orders));
 
   const earnings = useMemo(() => {
     const now = new Date();
@@ -235,6 +233,16 @@ export default function DriverDashboard() {
           onPress: async () => {
             try {
               await dispatch(sendArrivalNotification({ id: orderId })).unwrap();
+
+              // 2. Emit via the ALREADY connected socket
+              if (socket.connected) {
+                socket.emit("notify_confirmer", orderId);
+                Alert.alert("تنبيه", "تم إرسال تنبيه الوصول للمركز بنجاح");
+              } else {
+                // Reconnect if it dropped (common on mobile)
+                socket.connect();
+                socket.emit("notify_confirmer", orderId);
+              }
               Alert.alert("تنبيه", "تم إرسال تنبيه الوصول للمركز بنجاح");
             } catch (err) {
               Alert.alert("خطأ", "تعذر إرسال التنبيه");

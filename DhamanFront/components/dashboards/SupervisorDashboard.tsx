@@ -16,8 +16,6 @@ import {
   Package,
   ShieldCheck,
   MapPin,
-  Truck,
-  Headset,
   Plus,
   X,
   Pencil,
@@ -26,14 +24,12 @@ import {
   ChevronDown,
   Phone,
   Mail,
-  Trash2,
   UserX,
   UserPlus,
   XCircle,
 } from "lucide-react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/src/store/store";
-import api from "@/src/api/axios";
 import { StatusBar } from "expo-status-bar";
 import {
   addNewUser,
@@ -69,11 +65,13 @@ export default function SupervisorDashboard() {
   const [showEditRolePicker, setShowEditRolePicker] = useState(false);
   const [showWilayaPicker, setShowWilayaPicker] = useState(false);
   const [wilayaSearch, setWilayaSearch] = useState("");
+  
   const filteredWilayas = WILAYAS.filter(
     (w) =>
       w.ar_name.includes(wilayaSearch) ||
       w.code.toString().includes(wilayaSearch),
   );
+  
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -195,9 +193,8 @@ export default function SupervisorDashboard() {
 
   const handleUpdateMember = async () => {
     try {
-
       await dispatch(
-        updateMember({ id: editingMember.id, memberInfo: editingMember }),
+        updateMember({ id: editingMember._id, memberInfo: editingMember }),
       ).unwrap();
       setEditingMember(null);
       fetchData();
@@ -406,7 +403,7 @@ export default function SupervisorDashboard() {
       <Modal visible={!!editingMember} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/50">
           <View className="bg-white rounded-t-[40px] p-8">
-            <View className="flex-row-reverse justify-between items-center mb-6">
+            <View className="flex-row justify-between items-center mb-6">
               <Text className="text-xl font-black text-slate-900">
                 تعديل بيانات الموظف
               </Text>
@@ -422,7 +419,6 @@ export default function SupervisorDashboard() {
                 setEditingMember({ ...editingMember, username: t })
               }
             />
-            {/* Added Email Field Back Here */}
             <TextInput
               placeholder="البريد الالكتروني"
               value={editingMember?.email}
@@ -441,6 +437,19 @@ export default function SupervisorDashboard() {
                 setEditingMember({ ...editingMember, phone: t })
               }
             />
+            
+            <View className="relative mb-3">
+              <TouchableOpacity
+                onPress={() => setShowWilayaPicker(true)}
+                className="bg-slate-50 border border-slate-100 rounded-xl p-4 mb-3 flex-row-reverse justify-between items-center"
+              >
+                <MapPin size={18} color="#64748b" />
+                <Text className="font-bold text-slate-700">
+                  {editingMember?.wilaya || "اختر الولاية"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
               onPress={() => setShowEditRolePicker(!showEditRolePicker)}
               className="bg-slate-50 p-4 rounded-2xl mb-6 flex-row-reverse justify-between items-center"
@@ -622,30 +631,28 @@ export default function SupervisorDashboard() {
                   <TouchableOpacity
                     key={wilaya.code}
                     onPress={() => {
-                      setFormData({
-                        ...formData,
-                        wilaya: wilaya.ar_name,
-                      });
+                      if (editingMember) {
+                        setEditingMember({ ...editingMember, wilaya: wilaya.ar_name });
+                      } else {
+                        setFormData({ ...formData, wilaya: wilaya.ar_name });
+                      }
                       setShowWilayaPicker(false);
                       setWilayaSearch("");
                     }}
                     className={`w-[48%] p-4 mb-3 rounded-2xl border ${
-                      formData.wilaya === wilaya.ar_name
+                      (editingMember ? editingMember.wilaya === wilaya.ar_name : formData.wilaya === wilaya.ar_name)
                         ? "bg-emerald-50 border-emerald-500"
                         : "bg-slate-50 border-slate-100"
                     }`}
                   >
                     <Text
                       className={`text-center font-bold ${
-                        formData.wilaya === wilaya.ar_name
+                        (editingMember ? editingMember.wilaya === wilaya.ar_name : formData.wilaya === wilaya.ar_name)
                           ? "text-emerald-700"
                           : "text-slate-700"
                       }`}
                     >
                       {wilaya.code} - {wilaya.ar_name}
-                    </Text>
-                    <Text className="text-center text-[10px] text-slate-400">
-                      التوصيل: {wilaya.deliveryPrice} دج
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -659,7 +666,7 @@ export default function SupervisorDashboard() {
       <Modal visible={showModal} animationType="slide" transparent={true}>
         <View className="flex-1 justify-end bg-black/50">
           <View className="bg-white rounded-t-[40px] p-8 max-h-[90%]">
-            <View className="flex-row-reverse justify-between items-center mb-6">
+            <View className="flex-row justify-between items-center mb-6">
               <Text className="text-xl font-black text-slate-900">
                 حساب موظف جديد
               </Text>

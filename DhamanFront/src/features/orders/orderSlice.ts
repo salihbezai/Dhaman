@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { acceptOrderByDriver, getDriverOrders, getOrders, handleAddOrder, handleCancelOrder, handleConfirmTheOrder, handleNoAnswerOrder, handlePostponeOrder, handleRemoveOrderByConfirmer, sendArrivalNotification, updateOrderByConfirmer, updateOrderStatusByDriver } from "./orderActions";
 
 export interface Order {
-    _id: string;
+  _id: string;
   orderNumber: string;
   customerName: string;
   customerPhone: string;
@@ -244,7 +244,6 @@ const orderSlice = createSlice({
         const updatedOrderIndex = state.orders.findIndex(
           (order) => order._id === action.payload._id,
         );
-        console.log("the updatedOrderIndex "+updatedOrderIndex)
         if (updatedOrderIndex !== -1) {
           state.orders[updatedOrderIndex] = action.payload;
         }

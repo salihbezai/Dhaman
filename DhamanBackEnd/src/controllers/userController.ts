@@ -25,7 +25,7 @@ export interface JWTPayload {
 }
 
 interface NewUserResponseBody {
-  id: string;
+  _id: string;
   username: string;
   email: string;
   phone: string;
@@ -80,7 +80,7 @@ export const addNewUser = async (req: Request, res: Response) => {
 
     // respond with user data and token
     const user: NewUserResponseBody = {
-      id: newUser._id.toString(),
+      _id: newUser._id.toString(),
       username: newUser.username,
       email: newUser.email,
       phone: newUser.phone,
@@ -181,7 +181,7 @@ export const setUserActif = async (req: Request, res: Response) => {
 
 export const updateMemberInfo = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { username, email, phone, role } = req.body;
+  const { username, email, phone, role, wilaya } = req.body;
   try {
     const user = await User.findById(id).select("-password -refreshTokens");
     if (!user) {
@@ -197,6 +197,7 @@ export const updateMemberInfo = async (req: Request, res: Response) => {
     user.email = email;
     user.phone = phone;
     user.role = role;
+    user.wilaya = wilaya;
     await user.save();
 
     res.status(200).json({ user });

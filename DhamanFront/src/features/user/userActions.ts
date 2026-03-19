@@ -2,7 +2,6 @@ import api from "@/src/api/axios";
 import { getErrorMessage } from "@/src/utils/errorHelper";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { teamMember } from "./userSlice";
-import { updateUserInfo } from '../../../../DhamanBackEnd/src/controllers/userController';
 
 
 
@@ -15,7 +14,6 @@ export const addNewUser = createAsyncThunk<
   try {
     const { data } = await api.post("/users/add", formdata);
 
-    console.log("the data that we got " + JSON.stringify(data));
     return data.user;
   } catch (error: unknown) {
     return rejectWithValue(getErrorMessage(error));
@@ -45,7 +43,6 @@ export const desactivateUser = createAsyncThunk<
   { rejectValue: string }
 >("users/desactivateUser", async ({ id }, { rejectWithValue }) => {
   try {
-    console.log("the id "+id)
     const { data } = await api.put(`/users/member/inactif/${id}`);
     return data.user;
   } catch (error: unknown) {
@@ -72,7 +69,6 @@ export const updateMember = createAsyncThunk<
   { rejectValue: string }
 >("users/updateUser", async ({ id, memberInfo }, { rejectWithValue }) => {
   try {
-    console.log("the memberinfo "+JSON.stringify(memberInfo))
     const { data } = await api.put(`/users/member/update/${id}`, memberInfo);
     return data.user;
   } catch (error: unknown) {

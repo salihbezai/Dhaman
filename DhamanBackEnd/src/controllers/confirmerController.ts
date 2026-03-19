@@ -116,7 +116,8 @@ export const handleNoAnswer = async (req: Request, res: Response) => {
     order.callAttempts = newAttempts;
     // logic: If attempts reach 3 (per your requirements), auto-cancel
     if (order.callAttempts >= 3) {
-      order.status = OrderStatus.CANCELLED;
+      order.status = OrderStatus.CANCELLED
+      order.driverId = undefined;
       order.history.push({
         status: OrderStatus.CANCELLED,
         updatedAt: new Date(),
@@ -176,7 +177,6 @@ export const handleNoAnswer = async (req: Request, res: Response) => {
 
 export const confirmOrder = async (req: Request, res: Response) => {
   const id = req.params.id as string;
-
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: "Invalid Order ID format" });
   }
@@ -231,6 +231,7 @@ export const handleCancelOrder = async (req: Request, res: Response) => {
       req.params.id,
       {
         status: OrderStatus.CANCELLED,
+        driverId: undefined,
         $push: {
           history: {
             status: OrderStatus.CANCELLED,
@@ -261,6 +262,7 @@ export const handlePostponeOrder = async (req: Request, res: Response) => {
       req.params.id,
       {
         status: OrderStatus.POSTPONED,
+        driverId: undefined,
         $push: {
           history: {
             status: OrderStatus.POSTPONED,

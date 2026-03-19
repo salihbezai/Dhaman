@@ -44,6 +44,7 @@ import { StatusBar } from "expo-status-bar";
 import { ORDER_STATUS_LABELS_AR, OrderStatusKey } from "@/src/utils/utility";
 import { getProducts } from "@/src/features/products/productActions";
 import { WILAYAS } from "@/src/utils/wilayas";
+import { io, Socket } from "socket.io-client";
 
 const ConfirmerDashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -58,6 +59,7 @@ const ConfirmerDashboard = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [showWilayaPicker, setShowWilayaPicker] = useState(false);
+  const [incomingNotification, setIncomingNotification] = useState<any>(null);
   const [wilayaSearch, setWilayaSearch] = useState("");
   const filteredWilayas = WILAYAS.filter(
     (w) =>
@@ -88,6 +90,25 @@ const ConfirmerDashboard = () => {
 
     getData();
   }, [dispatch]);
+
+  useEffect(() => {
+  const socket = io(process.env.EXPO_PUBLIC_API_BASE_URL);
+
+  // Use the Confirmer's actual User ID from your Auth state/Redux
+  const myUserId = confirmer?.id; 
+
+  socket.emit("confirmer_join", myUserId); // Reusing your join logic for the User ID
+
+  socket.on("NEW_NOTIFICATION_DRIVER", (data) => {
+    console.log("Received new notification:", data);
+    setIncomingNotification(data);
+    // Show your modal or alert here
+  });
+
+  return () => {
+    socket.disconnect();
+  };
+}, [confirmer?.id]);
 
   const onRefresh = async () => {
     await dispatch(getOrders());

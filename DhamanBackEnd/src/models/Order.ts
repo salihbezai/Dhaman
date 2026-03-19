@@ -29,7 +29,7 @@ interface IOrder extends Document {
   status: OrderStatus;
 
   confirmerId?: Types.ObjectId;
-  driverId?: string;
+  driverId?: string ;
 
   callAttempts: number;
   postponedDate?: Date;

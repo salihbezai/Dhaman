@@ -97,18 +97,20 @@ export const acceptOrderByDriver = async (req: Request, res: Response) => {
       { driverId: req.user?.id },
       { new: true },
     );
-    if(!order)
+    if(!order) {
       return res
         .status(404)
         .json({ message: { en: "Order not found", ar: "الطلبية غير موجودة" } });
+    }
+
     // check if the order already has a driver
-    if (order.driverId) {
+    console.log("the order "+JSON.stringify(order))
+    console.log("order.driverId "+order.driverId)
+    if (order.driverId !== undefined || order.driverId !== null || order.driverId !== "") {
       return res
         .status(400)
         .json({ message: { en: "Order already has a driver", ar: "تم تعيين سائق لهذه الطلبية" } });
     }
-
-    
     res.status(200).json({order});
   } catch (err) {
 
