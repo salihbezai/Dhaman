@@ -140,7 +140,6 @@ export default function DriverDashboard() {
       setIsAccepting(false);
     }
   };
-  console.log("the orders " + JSON.stringify(orders));
 
   const earnings = useMemo(() => {
     const now = new Date();

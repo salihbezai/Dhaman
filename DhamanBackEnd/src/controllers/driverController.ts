@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { Order, OrderStatus } from "../models/Order";
 import mongoose from "mongoose";
-
+import {  NOTIFICATION_TYPES } from "../models/Notification";
+import {Notification as AppNotification} from "../models/Notification";
 // 1. Fetch orders assigned to the specific driver
 export const getDriverOrders = async (req: Request, res: Response) => {
   try {
@@ -72,18 +73,44 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 // 3. Handle Arrival Alert
 export const markArrival = async (req: Request, res: Response) => {
   try {
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { deliveryNotificationSent: true },
-      { new: true },
-    );
-    res.status(200).json({order});
-  } catch (err) {
-    res
-      .status(400)
-      .json({
-        message: { en: "Failed to send alert", ar: "فشل في إرسال التنبيه" },
+    const { id } = req.params;
+
+    // 2. Fetch the order first to ensure it exists and get the Confirmer ID
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({
+        message: { en: "Order not found", ar: "الطلبية غير موجودة" }
       });
+    }
+
+    // 3. Update the order status
+    order.deliveryNotificationSent = true;
+    await order.save();
+
+    // 4. Build the notification (using the renamed Model)
+    // IMPORTANT: Make sure 'confirmerId' or 'createdBy' is the correct field name in your Order Schema
+    const notificationData = {
+      recipientId: order.confirmerId, // Fallback check
+      senderId: req.user?.id,
+      orderId: order._id,
+      type: NOTIFICATION_TYPES.DRIVER_ARRIVED,
+    };
+
+    // Use the renamed import here
+    const createdNotification = await AppNotification.create(notificationData);
+
+    console.log("Notification created successfully:", createdNotification._id);
+
+    return res.status(200).json({ 
+      order 
+    });
+
+  } catch (err) {
+    console.error("Error in markArrival:", err);
+    return res.status(500).json({
+      message: { en: "Failed to send alert", ar: "فشل في إرسال التنبيه" },
+    });
   }
 };
 

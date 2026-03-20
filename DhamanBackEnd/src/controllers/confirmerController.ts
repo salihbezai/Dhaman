@@ -5,18 +5,16 @@ import mongoose from "mongoose";
 // 1. Get orders for Confirmer (New, No Answer, Postponed)
 export const getConfirmerOrders = async (req: Request, res: Response) => {
   try {
-
     // get orders by confirmerId
     const confirmerId = req.user?.id;
     if (!confirmerId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     const orders = await Order.find({
-      confirmerId: confirmerId
-    }) 
-    .populate("items.product", "name sku basePrice")
-    .sort({ createdAt: -1 });
-
+      confirmerId: confirmerId,
+    })
+      .populate("items.product", "name sku basePrice")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({ orders });
   } catch (err) {
@@ -26,12 +24,13 @@ export const getConfirmerOrders = async (req: Request, res: Response) => {
 };
 // 2. Add New Order
 import { Product } from "../models/Product";
+import { Notification } from "../models/Notification";
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const { items, ...orderData } = req.body;
-    console.log("items "+JSON.stringify(items))
-    console.log("orderData "+JSON.stringify(orderData))
+    console.log("items " + JSON.stringify(items));
+    console.log("orderData " + JSON.stringify(orderData));
     // 1. Map through items and fetch real details from DB
     const processedItems = await Promise.all(
       items.map(async (item: any) => {
@@ -53,35 +52,34 @@ export const createOrder = async (req: Request, res: Response) => {
       (sum, item) => sum + item.priceAtTimeOfOrder * item.quantity,
       0,
     );
-    
+
     // 3. Create the order
     const newOrder = new Order({
       ...orderData,
       items: processedItems,
-      totalAmount: totalAmount+orderData.deliveryPrice,
+      totalAmount: totalAmount + orderData.deliveryPrice,
       confirmerId: req.user?.id,
     });
 
     await newOrder.save();
-    res.status(201).json({newOrder});
+    res.status(201).json({ newOrder });
   } catch (err: any) {
-    console.log("soemthing went wrong ? "+err)
+    console.log("soemthing went wrong ? " + err);
     res.status(400).json({ message: err.message });
   }
 };
 
-
 // update order
 export const updateOrder = async (req: Request, res: Response) => {
   try {
-        const { customerName, customerPhone, totalAmount, wilaya, address, items } = req.body;
+    const { customerName, customerPhone, totalAmount, wilaya, address, items } =
+      req.body;
 
     const id = req.params.id as string;
     // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid Order ID format" });
     }
-
 
     const order = await Order.findById(id);
 
@@ -99,7 +97,7 @@ export const updateOrder = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(400).json({ message: "Update failed" });
   }
-}
+};
 
 // 3. Action: No Answer (Handles the 3-call logic)
 export const handleNoAnswer = async (req: Request, res: Response) => {
@@ -116,7 +114,7 @@ export const handleNoAnswer = async (req: Request, res: Response) => {
     order.callAttempts = newAttempts;
     // logic: If attempts reach 3 (per your requirements), auto-cancel
     if (order.callAttempts >= 3) {
-      order.status = OrderStatus.CANCELLED
+      order.status = OrderStatus.CANCELLED;
       order.driverId = undefined;
       order.history.push({
         status: OrderStatus.CANCELLED,
@@ -202,16 +200,14 @@ export const confirmOrder = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-   
     // 1. Grab the io instance from the app
     const io = req.app.get("socketio");
 
     // 2. Broadcast the popup data to the specific wilaya room
     if (io) {
-      console.log("to the wilaya "+order.wilaya)
-      io.to(order.wilaya).emit("NEW_ORDER_POPUP",order);
+      console.log("to the wilaya " + order.wilaya);
+      io.to(order.wilaya).emit("NEW_ORDER_POPUP", order);
     }
-   
 
     return res.status(200).json({ order });
   } catch (err: any) {
@@ -253,7 +249,7 @@ export const handlePostponeOrder = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
     const { postponedDate } = req.body;
-    console.log("trying to postpone")
+    console.log("trying to postpone");
     // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid Order ID format" });
@@ -280,7 +276,6 @@ export const handlePostponeOrder = async (req: Request, res: Response) => {
   }
 };
 
-
 export const handleRemoveOrder = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -301,5 +296,20 @@ export const getProducts = async (req: Request, res: Response) => {
     res.status(200).json({ products });
   } catch (err) {
     res.status(400).json({ message: "Update failed" });
+  }
+};
+
+// get notifications
+export const getConfirmerNotifications = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const notifications = await Notification.find({
+      recipientId: req.user?.id,
+    }).sort({ createdAt: -1 });
+    res.status(200).json({ notifications });
+  } catch (err) {
+    res.status(400).json({ message: "failded to get notifications" });
   }
 };

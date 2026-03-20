@@ -45,6 +45,7 @@ import { ORDER_STATUS_LABELS_AR, OrderStatusKey } from "@/src/utils/utility";
 import { getProducts } from "@/src/features/products/productActions";
 import { WILAYAS } from "@/src/utils/wilayas";
 import { io, Socket } from "socket.io-client";
+import { getNotifications } from "@/src/features/notifications/notificationActions";
 
 const ConfirmerDashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -54,6 +55,7 @@ const ConfirmerDashboard = () => {
   );
   const { products } = useSelector((state: RootState) => state.products);
   const { user: confirmer } = useSelector((state: RootState) => state.auth);
+  const { notifications } = useSelector((state: RootState) => state.notifications); 
 
   const [activeTab, setActiveTab] = useState("all");
   const [showForm, setShowForm] = useState(false);
@@ -70,7 +72,7 @@ const ConfirmerDashboard = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [viewingOrder, setViewingOrder] = useState<any>(null);
   const [showProductPicker, setShowProductPicker] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     _id: "",
     customerName: "",
@@ -92,23 +94,37 @@ const ConfirmerDashboard = () => {
   }, [dispatch]);
 
   useEffect(() => {
-  const socket = io(process.env.EXPO_PUBLIC_API_BASE_URL);
+       const getData = async () => {
+      await dispatch(getNotifications());
+    };
+    const socket = io(process.env.EXPO_PUBLIC_API_BASE_URL);
 
-  // Use the Confirmer's actual User ID from your Auth state/Redux
-  const myUserId = confirmer?.id; 
+    // Use the Confirmer's actual User ID from your Auth state/Redux
+    const myUserId = confirmer?.id;
 
-  socket.emit("confirmer_join", myUserId); // Reusing your join logic for the User ID
+    socket.emit("confirmer_join", myUserId); // Reusing your join logic for the User ID
 
-  socket.on("NEW_NOTIFICATION_DRIVER", (data) => {
-    console.log("Received new notification:", data);
-    setIncomingNotification(data);
-    // Show your modal or alert here
-  });
+    socket.on("NEW_NOTIFICATION_DRIVER", (data) => {
+      console.log("Received new notification:", data);
+      setIncomingNotification(data);
+      // Show your modal or alert here
+      // get notifications
+      getData();
+      console.log("the notifications "+ JSON.stringify(notifications));
+    });
 
-  return () => {
-    socket.disconnect();
-  };
-}, [confirmer?.id]);
+    return () => {
+      socket.disconnect();
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    const getData = async () => {
+      await dispatch(getNotifications());
+    };
+
+    getData();
+  }, [dispatch]);
 
   const onRefresh = async () => {
     await dispatch(getOrders());
@@ -122,10 +138,14 @@ const ConfirmerDashboard = () => {
       0,
     );
 
-    const selectedWilaya = WILAYAS.find(w => w.ar_name === currentWilayaArName);
-    const deliveryPrice = selectedWilaya ? parseInt(selectedWilaya.deliveryPrice) : 0;
-    
-    // The client pays the full delivery price. 
+    const selectedWilaya = WILAYAS.find(
+      (w) => w.ar_name === currentWilayaArName,
+    );
+    const deliveryPrice = selectedWilaya
+      ? parseInt(selectedWilaya.deliveryPrice)
+      : 0;
+
+    // The client pays the full delivery price.
     // You handle the 10% (us) / 90% (driver) split on the backend or in reports.
     return productsTotal + deliveryPrice;
   };
@@ -143,7 +163,7 @@ const ConfirmerDashboard = () => {
       Alert.alert("خطأ", "العنوان مطلوب لتوصيل الطلبية");
       return false;
     }
-    if(!formData.wilaya.trim()){
+    if (!formData.wilaya.trim()) {
       Alert.alert("خطأ", "الولاية مطلوبة لتوصيل الطلبية");
       return false;
     }
@@ -268,7 +288,7 @@ const ConfirmerDashboard = () => {
 
   const handleSaveOrder = async () => {
     if (!validateForm()) return;
-    const {_id, ...newOrderData} = formData;
+    const { _id, ...newOrderData } = formData;
 
     const isEditing = formData._id && formData._id !== "";
     const payload = isEditing ? formData : newOrderData;
@@ -280,7 +300,7 @@ const ConfirmerDashboard = () => {
         Alert.alert("تحديث", "تم تعديل بيانات الطلبية بنجاح");
       }
     } else {
-      const result = await dispatch(handleAddOrder({ formData: payload}));
+      const result = await dispatch(handleAddOrder({ formData: payload }));
       if (result.meta.requestStatus === "fulfilled") {
         setShowForm(false);
         Alert.alert("نجاح", "تم إضافة الطلبية الجديدة بنجاح");
@@ -309,7 +329,7 @@ const ConfirmerDashboard = () => {
         <View className="flex-row-reverse justify-between items-center mb-8">
           <TouchableOpacity
             onPress={() => {
-              const defaultWilaya = WILAYAS.find(w => w.ar_name === "باتنة");
+              const defaultWilaya = WILAYAS.find((w) => w.ar_name === "باتنة");
               setEditingOrder(null);
               setFormData({
                 _id: "",
@@ -360,31 +380,36 @@ const ConfirmerDashboard = () => {
           showsHorizontalScrollIndicator={false}
           className="flex-row"
         >
-          {["all", "PENDING", "CONFIRMED", "DELIVERED", "POSTPONED", "CANCELLED"].map(
-            (tab) => (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => setActiveTab(tab)}
-                className={`px-5 py-2.5 rounded-2xl ml-2 ${activeTab === tab ? "bg-emerald-500" : "bg-white/10"}`}
+          {[
+            "all",
+            "PENDING",
+            "CONFIRMED",
+            "DELIVERED",
+            "POSTPONED",
+            "CANCELLED",
+          ].map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              onPress={() => setActiveTab(tab)}
+              className={`px-5 py-2.5 rounded-2xl ml-2 ${activeTab === tab ? "bg-emerald-500" : "bg-white/10"}`}
+            >
+              <Text
+                className={`text-[11px] font-black ${activeTab === tab ? "text-white" : "text-white/60"}`}
               >
-                <Text
-                  className={`text-[11px] font-black ${activeTab === tab ? "text-white" : "text-white/60"}`}
-                >
-                  {tab === "all"
-                    ? "الكل"
-                    : tab === "PENDING"
-                      ? "معلقة"
-                      : tab === "CONFIRMED"
-                        ? "مؤكدة"
-                        : tab === "DELIVERED"
-                          ? "تم التسليم"
+                {tab === "all"
+                  ? "الكل"
+                  : tab === "PENDING"
+                    ? "معلقة"
+                    : tab === "CONFIRMED"
+                      ? "مؤكدة"
+                      : tab === "DELIVERED"
+                        ? "تم التسليم"
                         : tab === "POSTPONED"
                           ? "مؤجلة"
                           : "ملغاة"}
-                </Text>
-              </TouchableOpacity>
-            ),
-          )}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
       </View>
 
@@ -666,7 +691,9 @@ const ConfirmerDashboard = () => {
                 value={formData.address}
                 onChangeText={(t) => setFormData({ ...formData, address: t })}
               />
-              <Text className="text-slate-400 font-bold mb-1">حقوق التوصيل</Text>
+              <Text className="text-slate-400 font-bold mb-1">
+                حقوق التوصيل
+              </Text>
               <TextInput
                 className="bg-slate-50 border border-slate-100 rounded-xl p-3 mb-3 font-bold"
                 editable={false}
@@ -808,16 +835,19 @@ const ConfirmerDashboard = () => {
                   <TouchableOpacity
                     key={wilaya.code}
                     onPress={() => {
-                      const newTotal = calculateTotal(formData.items, wilaya.ar_name);
-                      setFormData({ 
-                        ...formData, 
+                      const newTotal = calculateTotal(
+                        formData.items,
+                        wilaya.ar_name,
+                      );
+                      setFormData({
+                        ...formData,
                         wilaya: wilaya.ar_name,
                         // Update: Client pays the original price
                         deliveryPrice: parseInt(wilaya.deliveryPrice || "0"),
-                        totalAmount: newTotal 
+                        totalAmount: newTotal,
                       });
                       setShowWilayaPicker(false);
-                      setWilayaSearch(""); 
+                      setWilayaSearch("");
                     }}
                     className={`w-[48%] p-4 mb-3 rounded-2xl border ${
                       formData.wilaya === wilaya.ar_name

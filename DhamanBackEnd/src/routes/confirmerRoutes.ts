@@ -9,7 +9,8 @@ import {
   handlePostponeOrder,
   updateOrder,
   handleRemoveOrder,
-  getProducts, 
+  getProducts,
+  getConfirmerNotifications, 
 } from '../controllers/confirmerController';
 
 const router = Router();
@@ -30,6 +31,9 @@ router.delete('/orders/:id',protect, confirmerOnly, handleRemoveOrder);
 
 // get the products
 router.get('/products',protect, confirmerOnly, getProducts);
+
+// get notifications
+router.get('/notifications',protect, confirmerOnly, getConfirmerNotifications);
 
 
 
