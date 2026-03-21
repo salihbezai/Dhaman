@@ -130,11 +130,9 @@ export default function DriverDashboard() {
       // Ensure your backend logic handles the race condition (first-come-first-served)
       await dispatch(acceptOrderByDriver({ id: incomingOrder._id })).unwrap();
       setShowIncomingModal(false);
-      Alert.alert("مبروك!", "لقد تم قبول الطلبية بنجاح");
+      Alert.alert("نجاح!", "لقد تم قبول الطلبية بنجاح");
     } catch (err) {
-      console.log("the error " + err);
-      //Alert.alert("للأسف", "قام سائق آخر بقبول هذه الطلبية قبلك");
-      Alert.alert(" the error is " + err);
+      Alert.alert("للأسف", "قام سائق آخر بقبول هذه الطلبية قبلك");
       setShowIncomingModal(false);
     } finally {
       setIsAccepting(false);

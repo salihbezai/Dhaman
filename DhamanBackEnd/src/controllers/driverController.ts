@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { Order, OrderStatus } from "../models/Order";
 import mongoose from "mongoose";
-import {  NOTIFICATION_TYPES } from "../models/Notification";
-import {Notification as AppNotification} from "../models/Notification";
+import { NOTIFICATION_TYPES } from "../models/Notification";
+import { Notification as AppNotification } from "../models/Notification";
 // 1. Fetch orders assigned to the specific driver
 export const getDriverOrders = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    
+
     // We want to show today's finished work + all currently active work
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -17,18 +17,18 @@ export const getDriverOrders = async (req: Request, res: Response) => {
       $or: [
         // 1. All Active/Pending work (no matter the date)
         { status: { $in: ["CONFIRMED", "OUT_FOR_DELIVERY", "POSTPONED"] } },
-        
-        // 2. All completed/failed work from TODAY only
-        { 
-          status: { $in: ["DELIVERED", "CANCELLED", "RETURNED", "EXCHANGED"] },
-          updatedAt: { $gte: todayStart } 
-        }
-      ]
-    })
-    .populate("items.product", "name sku basePrice")
-    .sort({ updatedAt: -1 }); // Sort by most recent update so finished ones appear at the top of history
 
-    res.status(200).json({orders});
+        // 2. All completed/failed work from TODAY only
+        {
+          status: { $in: ["DELIVERED", "CANCELLED", "RETURNED", "EXCHANGED"] },
+          updatedAt: { $gte: todayStart },
+        },
+      ],
+    })
+      .populate("items.product", "name sku basePrice")
+      .sort({ updatedAt: -1 }); // Sort by most recent update so finished ones appear at the top of history
+
+    res.status(200).json({ orders });
   } catch (err) {
     res.status(500).json({ message: "Error fetching driver tasks" });
   }
@@ -39,7 +39,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { status, note } = req.body;
-    console.log("the status and note and id "+id+" "+status+" "+note)
+    console.log("the status and note and id " + id + " " + status + " " + note);
 
     const order = await Order.findById(id);
     if (!order)
@@ -62,7 +62,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     }
 
     await order.save();
-    res.status(200).json({order});
+    res.status(200).json({ order });
   } catch (err) {
     res
       .status(400)
@@ -80,7 +80,7 @@ export const markArrival = async (req: Request, res: Response) => {
 
     if (!order) {
       return res.status(404).json({
-        message: { en: "Order not found", ar: "الطلبية غير موجودة" }
+        message: { en: "Order not found", ar: "الطلبية غير موجودة" },
       });
     }
 
@@ -100,12 +100,19 @@ export const markArrival = async (req: Request, res: Response) => {
     // Use the renamed import here
     const createdNotification = await AppNotification.create(notificationData);
 
-    console.log("Notification created successfully:", createdNotification._id);
+    // 1. Grab the io instance from the app
+    const io = req.app.get("socketio");
 
-    return res.status(200).json({ 
-      order 
+ 
+
+    const confirmerId = order.confirmerId!.toString();
+    
+    // 2. Target ONLY the room belonging to that specific Confirmer
+    io.to(confirmerId).emit("NEW_NOTIFICATION_DRIVER", order);
+
+    return res.status(200).json({
+      order,
     });
-
   } catch (err) {
     console.error("Error in markArrival:", err);
     return res.status(500).json({
@@ -114,37 +121,41 @@ export const markArrival = async (req: Request, res: Response) => {
   }
 };
 
-
 // Accept order by driver
 export const acceptOrderByDriver = async (req: Request, res: Response) => {
   try {
-
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       { driverId: req.user?.id },
       { new: true },
     );
-    if(!order) {
+    if (!order) {
       return res
         .status(404)
         .json({ message: { en: "Order not found", ar: "الطلبية غير موجودة" } });
     }
 
     // check if the order already has a driver
-    console.log("the order "+JSON.stringify(order))
-    console.log("order.driverId "+order.driverId)
-    if (order.driverId !== undefined || order.driverId !== null || order.driverId !== "") {
+    console.log("the order " + JSON.stringify(order));
+    console.log("order.driverId " + order.driverId);
+    if (
+      order.driverId === undefined ||
+      order.driverId === null ||
+      order.driverId === ""
+    ) {
       return res
         .status(400)
-        .json({ message: { en: "Order already has a driver", ar: "تم تعيين سائق لهذه الطلبية" } });
+        .json({
+          message: {
+            en: "Order already has a driver",
+            ar: "تم تعيين سائق لهذه الطلبية",
+          },
+        });
     }
-    res.status(200).json({order});
+    res.status(200).json({ order });
   } catch (err) {
-
-    res
-      .status(400)
-      .json({
-        message: { en: "Failed to accept order", ar: "فشل في قبول الطلب" },
-      });
+    res.status(400).json({
+      message: { en: "Failed to accept order", ar: "فشل في قبول الطلب" },
+    });
   }
-}
+};

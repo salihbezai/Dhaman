@@ -2,7 +2,7 @@ const app = require("./app");
 import connectDb from "./config/db";
 import dotenv from "dotenv";
 import { Server } from "socket.io"; // 1. Import Socket.io
-import http from "http";            // 2. Import HTTP
+import http from "http"; // 2. Import HTTP
 import { Order } from "./models/Order";
 
 dotenv.config();
@@ -15,42 +15,27 @@ const server = http.createServer(app);
 // 4. Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: "*", 
-    methods: ["GET", "POST"]
-  }
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
 });
+
+
 
 // 5. Setup Socket Connection Logic
 io.on("connection", (socket) => {
-
   socket.on("join_wilaya", (wilaya) => {
     socket.join(wilaya);
-    // console.log(`Driver joined room: ${wilaya}`);
   });
 
   socket.on("confirmer_join", (confirmerId) => {
     socket.join(confirmerId);
-    console.log(`confirmer ${confirmerId} joined`)
+    console.log(`confirmer ${confirmerId} joined`);
+   
+
   });
 
-  socket.on("notify_confirmer", async (orderId) => {
-  try {
-    // 1. Find the order to get the Confirmer's ID
-    const order = await Order.findById(orderId);
-    if (!order || !order.confirmerId) return;
 
-    const confirmerId = order.confirmerId.toString();
-
-
-
-    // 2. Target ONLY the room belonging to that specific Confirmer
-    io.to(confirmerId).emit("NEW_NOTIFICATION_DRIVER", order);
-    
-    console.log(`Notification sent to Confirmer: ${confirmerId}`);
-  } catch (err) {
-    console.error("Socket error:", err);
-  }
-});
 
 
   socket.on("disconnect", () => {
