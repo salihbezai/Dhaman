@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getNotifications } from "./notificationActions";
+import { getNotifications, handleMarkAsRead } from "./notificationActions";
 
 export interface Notification {
     _id: string;
@@ -44,7 +44,27 @@ const notificationSlice = createSlice({
       state.loading = false;
       state.error = action.payload ?? "خطاء في جلب الاشعارات";
     })
-     
+    .addCase(handleMarkAsRead.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(handleMarkAsRead.fulfilled, (state, action) => {
+      state.loading = false;
+      // find the notification in the state and change the notification 
+      // with the new one that we gaonna get from the action.payload 
+      // using the index of the notification in the state
+      const index = state.notifications.findIndex(
+        (notification) => notification._id === action.payload._id
+      );
+      if (index !== -1) {
+        state.notifications[index] = action.payload;
+      }
+    })
+    .addCase(handleMarkAsRead.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload ?? "خطاء في جعل التنبيه مقروء ";
+    })
+
   },
 });
 

@@ -10,7 +10,8 @@ import {
   updateOrder,
   handleRemoveOrder,
   getProducts,
-  getConfirmerNotifications, 
+  getConfirmerNotifications,
+  markNotificationAsRead, 
 } from '../controllers/confirmerController';
 
 const router = Router();
@@ -34,7 +35,7 @@ router.get('/products',protect, confirmerOnly, getProducts);
 
 // get notifications
 router.get('/notifications',protect, confirmerOnly, getConfirmerNotifications);
-
+router.put('/notifications/:id/read',protect, confirmerOnly,markNotificationAsRead);
 
 
 export default router;

@@ -307,9 +307,30 @@ export const getConfirmerNotifications = async (
   try {
     const notifications = await Notification.find({
       recipientId: req.user?.id,
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: 1 });
+    console.log("here ")
     res.status(200).json({ notifications });
   } catch (err) {
     res.status(400).json({ message: "failded to get notifications" });
   }
 };
+
+
+// mark notifications as read
+export const markNotificationAsRead = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Notification ID format" });
+    }
+    const notification = await Notification.findByIdAndUpdate(
+      id,
+      { isRead: true },
+      { new: true },
+    );
+    res.status(200).json({ notification });
+  } catch (err) {
+    res.status(400).json({ message: "Update failed" });
+  }
+}

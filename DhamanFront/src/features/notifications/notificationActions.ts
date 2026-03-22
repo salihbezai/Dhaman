@@ -19,3 +19,16 @@ export const getNotifications = createAsyncThunk<
     return rejectWithValue(getErrorMessage(err));
   }
 });
+
+export const handleMarkAsRead = createAsyncThunk<
+  Notification,
+  { id: string },
+  { rejectValue: string }
+>("orders/handleMarkAsRead", async ({ id }, { rejectWithValue }) => {
+  try {
+    const { data } = await api.put(`/confirmer/notifications/${id}/read`);
+    return data.notification;
+  } catch (err) {
+    return rejectWithValue(getErrorMessage(err));
+  }
+});
