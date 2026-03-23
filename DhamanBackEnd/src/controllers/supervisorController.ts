@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { User, UserRole } from '../models/User';
-import { Order, OrderStatus } from '../models/Order';
+import { Order } from '../models/Order';
 import bcrypt from "bcrypt";
 import { Product } from '../models/Product';
 import { logger } from '../utility';

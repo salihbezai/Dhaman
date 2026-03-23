@@ -132,46 +132,7 @@ export const handleNoAnswer = async (req: Request, res: Response) => {
   }
 };
 
-// 4. Action: Confirm (Moves to Out for Delivery)
-// export const confirmOrder = async (req: Request, res: Response) => {
-//   const id = req.params.id as string;
-//   // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
-//   if (!mongoose.Types.ObjectId.isValid(id)) {
-//     return res.status(400).json({ message: "Invalid Order ID format" });
-//   }
-//   try {
-//     // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
-//     if (!mongoose.Types.ObjectId.isValid(id)) {
-//       return res.status(400).json({ message: "Invalid Order ID format" });
-//     }
 
-//     const order = await Order.findByIdAndUpdate(
-//       id,
-//       {
-//         $set: { status: OrderStatus.CONFIRMED },
-//         $push: {
-//           history: {
-//             status: OrderStatus.CONFIRMED,
-//             updatedAt: new Date(),
-//             updatedBy: new mongoose.Types.ObjectId(req.user?.id),
-//             note: "Order confirmed by confirmer",
-//           },
-//         },
-//       },
-//       { returnDocument: "after", runValidators: true },
-//     );
-
-//     if (!order) {
-//       return res.status(404).json({ message: "Order not found" });
-//     }
-
-//     return res.status(200).json({ order });
-//   } catch (err: any) {
-//     return res
-//       .status(500)
-//       .json({ message: "Internal Server Error", error: err.message });
-//   }
-// };
 
 export const confirmOrder = async (req: Request, res: Response) => {
   const id = req.params.id as string;

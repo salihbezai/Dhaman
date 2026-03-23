@@ -65,13 +65,13 @@ export default function SupervisorDashboard() {
   const [showEditRolePicker, setShowEditRolePicker] = useState(false);
   const [showWilayaPicker, setShowWilayaPicker] = useState(false);
   const [wilayaSearch, setWilayaSearch] = useState("");
-  
+
   const filteredWilayas = WILAYAS.filter(
     (w) =>
       w.ar_name.includes(wilayaSearch) ||
       w.code.toString().includes(wilayaSearch),
   );
-  
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -437,7 +437,7 @@ export default function SupervisorDashboard() {
                 setEditingMember({ ...editingMember, phone: t })
               }
             />
-            
+
             <View className="relative mb-3">
               <TouchableOpacity
                 onPress={() => setShowWilayaPicker(true)}
@@ -632,7 +632,10 @@ export default function SupervisorDashboard() {
                     key={wilaya.code}
                     onPress={() => {
                       if (editingMember) {
-                        setEditingMember({ ...editingMember, wilaya: wilaya.ar_name });
+                        setEditingMember({
+                          ...editingMember,
+                          wilaya: wilaya.ar_name,
+                        });
                       } else {
                         setFormData({ ...formData, wilaya: wilaya.ar_name });
                       }
@@ -640,14 +643,22 @@ export default function SupervisorDashboard() {
                       setWilayaSearch("");
                     }}
                     className={`w-[48%] p-4 mb-3 rounded-2xl border ${
-                      (editingMember ? editingMember.wilaya === wilaya.ar_name : formData.wilaya === wilaya.ar_name)
+                      (
+                        editingMember
+                          ? editingMember.wilaya === wilaya.ar_name
+                          : formData.wilaya === wilaya.ar_name
+                      )
                         ? "bg-emerald-50 border-emerald-500"
                         : "bg-slate-50 border-slate-100"
                     }`}
                   >
                     <Text
                       className={`text-center font-bold ${
-                        (editingMember ? editingMember.wilaya === wilaya.ar_name : formData.wilaya === wilaya.ar_name)
+                        (
+                          editingMember
+                            ? editingMember.wilaya === wilaya.ar_name
+                            : formData.wilaya === wilaya.ar_name
+                        )
                           ? "text-emerald-700"
                           : "text-slate-700"
                       }`}

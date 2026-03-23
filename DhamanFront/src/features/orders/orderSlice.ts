@@ -267,6 +267,8 @@ const orderSlice = createSlice({
         state.error = action.payload ?? "خطاء في تاكيد الطلب";
       })
 
+    
+
   },
 });
 

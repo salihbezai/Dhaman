@@ -31,7 +31,6 @@ export const loginUser = createAsyncThunk<
     // Save tokens to Secure Storage immediately upon successful login
     await SecureStore.setItemAsync("accessToken", data.token);
     await SecureStore.setItemAsync("refreshToken", data.refreshToken);
-    console.log("the data that we got " + JSON.stringify(data));
     return data;
   } catch (error: unknown) {
     return rejectWithValue(getErrorMessage(error));

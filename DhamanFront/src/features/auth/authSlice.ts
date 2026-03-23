@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { loginUser, logoutUser } from "./authActions";
-import * as SecureStore from 'expo-secure-store';
+import { loginUser } from "./authActions";
 
 export interface User {
   id: string;

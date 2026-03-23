@@ -204,15 +204,3 @@ export const acceptOrderByDriver = createAsyncThunk<
 });
 
 
-export const getNotifications = createAsyncThunk<
-  Notification[],
-  void,
-  { rejectValue: string }
->("orders/getNotifications", async (_, { rejectWithValue }) => {
-  try {
-    const { data } = await api.get("/confirmer/notifications");
-    return data.notifications;
-  } catch (err) {
-    return rejectWithValue(getErrorMessage(err));
-  }
-});

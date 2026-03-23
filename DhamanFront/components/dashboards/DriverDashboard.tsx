@@ -36,7 +36,6 @@ import { useRouter } from "expo-router";
 import {
   acceptOrderByDriver,
   getDriverOrders,
-  handleConfirmTheOrder,
   sendArrivalNotification,
   updateOrderStatusByDriver,
 } from "@/src/features/orders/orderActions";
@@ -46,6 +45,7 @@ import {
   TAX_RATE,
 } from "@/src/utils/utility";
 import { io, Socket } from "socket.io-client"; // 1. Added Socket Import
+import { Audio } from "expo-av";
 
 type FilterPeriod = "today" | "lastMonth" | "lastSixMonths" | "lastYear";
 
@@ -88,10 +88,11 @@ export default function DriverDashboard() {
 
     socket.emit("join_wilaya", driver.wilaya);
 
-    socket.on("NEW_ORDER_POPUP", (data) => {
+    socket.on("NEW_ORDER_POPUP", async (data) => {
       setIncomingOrder(data);
       setTimeLeft(15); // Reset timer to 15 seconds
       setShowIncomingModal(true);
+      await playNotificationSound();
     });
 
     return () => {
@@ -217,6 +218,21 @@ export default function DriverDashboard() {
         },
       ],
     );
+  };
+  const playNotificationSound = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require("@/assets/sounds/notification.mp3"),
+      );
+      await sound.playAsync();
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          sound.unloadAsync();
+        }
+      });
+    } catch (error) {
+      console.log("Error playing sound", error);
+    }
   };
 
   const sendArrivalAlert = (orderId: string) => {

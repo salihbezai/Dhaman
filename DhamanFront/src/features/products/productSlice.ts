@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getConfirmerOrders, handleCancelOrder, handleConfirmTheOrder, handleNoAnswerOrder, handlePostponeOrder, handleRemoveOrderByConfirmer, updateOrderByConfirmer } from "./orderActions";
 import { getProducts } from "./productActions";
 
 export interface Product {

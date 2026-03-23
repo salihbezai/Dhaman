@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import { activateUser, addNewUser, desactivateUser, getTeamMembers, updateMember, updateUserProfileInfo } from "./userActions";
 
 export interface User {
