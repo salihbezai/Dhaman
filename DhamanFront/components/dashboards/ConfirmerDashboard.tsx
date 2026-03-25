@@ -348,35 +348,40 @@ const ConfirmerDashboard = () => {
       {/* Header */}
       <View className="bg-slate-900 pt-14 pb-6 px-6 rounded-b-[3rem] shadow-2xl">
         <View className="flex-row-reverse justify-between items-center mb-8">
-          <TouchableOpacity
-            onPress={() => {
-              const defaultWilaya = WILAYAS.find((w) => w.ar_name === "باتنة");
-              setEditingOrder(null);
-              setFormData({
-                _id: "",
-                customerName: "",
-                customerPhone: "",
-                totalAmount: 0,
-                wilaya: "باتنة",
-                address: "حي الرياض",
-                deliveryPrice: parseInt(defaultWilaya?.deliveryPrice || "0"),
-                items: [],
-              });
-              setShowForm(true);
-            }}
-            className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl"
-          >
-            <Plus size={22} color="#10b981" strokeWidth={2.5} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setShowNotifications(true)}
-            className="bg-slate-800 border border-slate-700 p-3 rounded-2xl relative"
-          >
-            <Bell size={22} color="white" />
-            {notifications.some((n) => n.isRead === false) && (
-              <View className="absolute top-2.5 right-2.5 w-3 h-3 bg-rose-500 rounded-full border-2 border-slate-900" />
-            )}
-          </TouchableOpacity>
+          <View className="flex-row-reverse items-center gap-3">
+            <TouchableOpacity
+              onPress={() => {
+                const defaultWilaya = WILAYAS.find(
+                  (w) => w.ar_name === "باتنة",
+                );
+                setEditingOrder(null);
+                setFormData({
+                  _id: "",
+                  customerName: "",
+                  customerPhone: "",
+                  totalAmount: 0,
+                  wilaya: "باتنة",
+                  address: "حي الرياض",
+                  deliveryPrice: parseInt(defaultWilaya?.deliveryPrice || "0"),
+                  items: [],
+                });
+                setShowForm(true);
+              }}
+              className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl"
+            >
+              <Plus size={22} color="#10b981" strokeWidth={2.5} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowNotifications(true)}
+              className="bg-slate-800 border border-slate-700 p-3 rounded-2xl relative"
+            >
+              <Bell strokeWidth={2.5} className="" size={22} color="white" />
+              {notifications.some((n) => n.isRead === false) && (
+                <View className="absolute top-2.5 right-2.5 w-3 h-3 bg-rose-500 rounded-full border-2 border-slate-900" />
+              )}
+            </TouchableOpacity>
+          </View>
+
           <View className="flex-row-reverse items-center">
             <View className="mr-3 items-start">
               <Text className="text-white text-lg font-black leading-tight">
