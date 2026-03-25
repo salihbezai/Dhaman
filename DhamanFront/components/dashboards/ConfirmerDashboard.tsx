@@ -1,35 +1,45 @@
-import React, { useState, useEffect } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Linking,
-  RefreshControl,
-  ActivityIndicator,
-  Image,
-  Modal,
-  TextInput,
-} from "react-native";
+  getNotifications,
+  handleMarkAsRead,
+} from "@/src/features/notifications/notificationActions";
+import { getProducts } from "@/src/features/products/productActions";
+import { AppDispatch, RootState } from "@/src/store/store";
+import { ORDER_STATUS_LABELS_AR, OrderStatusKey } from "@/src/utils/utility";
+import { WILAYAS } from "@/src/utils/wilayas";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Audio } from "expo-av";
+import { StatusBar } from "expo-status-bar";
 import {
+  Bell,
   CheckCircle,
-  XCircle,
   Clock,
-  Phone,
-  Plus,
-  PhoneOff,
-  Trash2,
+  Edit,
   Eye,
-  Package,
   MapPin,
   Minus,
-  Edit,
-  Bell,
+  Package,
+  Phone,
+  PhoneOff,
+  Plus,
+  Trash2,
+  XCircle,
 } from "lucide-react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Linking,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/src/store/store";
+import { io } from "socket.io-client";
 import {
   getOrders,
   handleAddOrder,
@@ -40,16 +50,6 @@ import {
   handleRemoveOrderByConfirmer,
   updateOrderByConfirmer,
 } from "../../src/features/orders/orderActions";
-import { StatusBar } from "expo-status-bar";
-import { ORDER_STATUS_LABELS_AR, OrderStatusKey } from "@/src/utils/utility";
-import { getProducts } from "@/src/features/products/productActions";
-import { WILAYAS } from "@/src/utils/wilayas";
-import { io } from "socket.io-client";
-import {
-  getNotifications,
-  handleMarkAsRead,
-} from "@/src/features/notifications/notificationActions";
-import { Audio } from "expo-av";
 
 const ConfirmerDashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -606,65 +606,176 @@ const ConfirmerDashboard = () => {
       </ScrollView>
 
       {/* --- Details Modal --- */}
+      {/* --- Detailed Order Modal (Arabic Optimized) --- */}
       <Modal
         visible={!!viewingOrder}
         animationType="slide"
         transparent
         onRequestClose={() => setViewingOrder(null)}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="bg-white rounded-t-[3rem] p-8 shadow-2xl">
+        <View className="flex-1 justify-end bg-black/60">
+          <View className="bg-white rounded-t-[3rem] p-6 shadow-2xl h-[90%]">
+            {/* Handle Bar */}
             <View className="w-12 h-1.5 bg-slate-200 rounded-full self-center mb-6" />
-            <Text className="text-slate-900 text-xl font-black mb-6">
-              تفاصيل الطلبية
-            </Text>
 
-            <View className="bg-slate-50 rounded-3xl p-5 mb-5 border border-slate-100">
-              <View className="flex-row items-center mb-1">
-                <Package size={18} color="#10b981" />
-                <Text className="text-slate-800 font-black mr-2">
-                  قائمة المنتجات:
-                </Text>
-              </View>
-              {viewingOrder?.items?.map((item: any, index: number) => (
-                <View
-                  key={index}
-                  className={`flex-row justify-between items-center py-3 ${index !== viewingOrder.items.length - 1 ? "border-b border-slate-200/50" : ""}`}
-                >
-                  <View className="bg-emerald-100 px-3 py-1 rounded-lg">
-                    <Text className="text-emerald-700 font-black text-[14px]">
-                      {item.priceAtTimeOfOrder} دج{" "}
-                      <Text className="text-red-600">x{item.quantity}</Text>
-                    </Text>
-                  </View>
-                  <Text className="text-slate-700 font-bold text-[16px] flex-1 ml-2">
-                    {item.productName}
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Header: Order Number & Status (RTL) */}
+              <View className="flex-row justify-between items-center mb-6">
+                <View className="flex-row items-center">
+                  <Text className="text-slate-400 text-xl font-bold">
+                    رقم الطلبية:
+                  </Text>
+                  <Text className="text-slate-900 text-xl font-black">
+                    #{viewingOrder?.orderNumber}
                   </Text>
                 </View>
-              ))}
-            </View>
-
-            <View className="bg-slate-50 rounded-3xl p-5 mb-8 border border-slate-100">
-              <View className="flex-row items-center mb-3">
-                <MapPin size={18} color="#10b981" />
-                <Text className="text-slate-800 font-black mr-2">
-                  معلومات التوصيل:
-                </Text>
               </View>
-              <Text className="text-slate-700 font-bold ">
-                الولاية: {viewingOrder?.wilaya}
-              </Text>
-              <Text className="text-slate-500 font-bold mt-1 ">
-                العنوان: {viewingOrder?.address || "غير محدد"}
-              </Text>
-            </View>
 
-            <TouchableOpacity
-              onPress={() => setViewingOrder(null)}
-              className="bg-slate-900 py-4 rounded-2xl items-center mb-4"
-            >
-              <Text className="text-white font-black text-base">إغلاق</Text>
-            </TouchableOpacity>
+              {/* Section 1: Customer Details (RTL) */}
+              <View className="bg-slate-50 rounded-[2rem] p-5 mb-4 border border-slate-100">
+                <View className="flex-row items-center mb-4">
+                  <Text className="text-slate-800 font-black mr-3 text-lg">
+                    بيانات الزبون
+                  </Text>
+                </View>
+
+                <View className="px-2">
+                  <Text className="text-slate-900 text-xl font-bold mb-3">
+                    {viewingOrder?.customerName}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      Linking.openURL(`tel:${viewingOrder?.customerPhone}`)
+                    }
+                    className="flex-row items-center bg-white px-5 py-3 rounded-2xl border border-slate-200 w-full justify-center"
+                  >
+                    <Text className="text-emerald-600 font-black ml-3 text-lg">
+                      {viewingOrder?.customerPhone}
+                    </Text>
+                    <Phone size={20} color="#10b981" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Section 2: Items List (RTL) */}
+              <View className="bg-slate-50 rounded-[2rem] p-5 mb-4 border border-slate-100">
+                <View className="flex-row items-center mb-4">
+                  <View className="bg-blue-500/10 p-2 rounded-lg">
+                    <Package size={18} color="#3b82f6" />
+                  </View>
+                  <Text className="text-slate-800 font-black mr-3 text-lg">
+                    قائمة المنتجات
+                  </Text>
+                </View>
+
+                {viewingOrder?.items?.map((item: any, index: number) => (
+                  <View
+                    key={index}
+                    className={`flex-row-reverse justify-between items-center py-4 ${index !== viewingOrder.items.length - 1 ? "border-b border-slate-200/50" : ""}`}
+                  >
+                    <View className="items-end flex-1 mr-3">
+                      <Text className="text-slate-800 font-bold text-base text-right">
+                        {item.productName}
+                      </Text>
+                      <Text className="text-slate-400 text-xs text-right">
+                        {item.priceAtTimeOfOrder} دج للمنتج
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center">
+                      <Text className="text-slate-900 font-black text-base">
+                        {item.priceAtTimeOfOrder * item.quantity} دج
+                      </Text>
+                      <View className="bg-slate-200 px-2 py-1 rounded-md ml-3">
+                        <Text className="text-slate-700 font-bold text-xs">
+                          x{item.quantity}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+
+              {/* Section 3: Shipping & Time (RTL) */}
+              <View className="bg-slate-50 rounded-[2rem] p-5 mb-4 border border-slate-100">
+                <View className="flex-row items-center mb-4">
+                  <View className="bg-rose-500/10 p-2 rounded-lg">
+                    <MapPin size={18} color="#f43f5e" />
+                  </View>
+                  <Text className="text-slate-800 font-black mr-3 text-lg">
+                    معلومات التوصيل والوقت
+                  </Text>
+                </View>
+                <View className="items-end px-2 space-y-3">
+                  <View className="flex-row justify-between w-full">
+                    <Text className="text-slate-400">الولاية:</Text>
+                    <Text className="text-slate-800 font-bold">
+                      {viewingOrder?.wilaya}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between w-full">
+                    <Text className="text-slate-400">العنوان:</Text>
+                    <Text className="text-slate-800 font-bold text-right">
+                      {viewingOrder?.address || "غير محدد"}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between w-full pt-3 border-t border-slate-200">
+                    <Text className="text-slate-400">تاريخ الإنشاء:</Text>
+                    <Text className="text-slate-600 text-xs font-bold">
+                      {new Date(viewingOrder?.createdAt).toLocaleDateString(
+                        "ar-DZ",
+                      )}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Section 4: Price Summary (Arabic Styled) */}
+              <View className="bg-slate-900 rounded-[2rem] p-6 mb-8 shadow-xl">
+                <View className="flex-row justify-between mb-3">
+                  <Text className="text-slate-400">سعر السلع:</Text>
+                  <Text className="text-white font-bold">
+                    {viewingOrder?.totalAmount -
+                      (viewingOrder?.deliveryPrice || 0)}{" "}
+                    دج
+                  </Text>
+                </View>
+                <View className="flex-row justify-between mb-4 pb-4 border-b border-white/10">
+                  <Text className="text-slate-400">تكلفة التوصيل:</Text>
+                  <Text className="text-emerald-400 font-bold">
+                    {viewingOrder?.deliveryPrice || 0} دج
+                  </Text>
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-white font-black text-xl">
+                    المبلغ الإجمالي:
+                  </Text>
+                  <Text className="text-emerald-400 font-black text-2xl">
+                    {viewingOrder?.totalAmount} دج
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Bottom Actions (RTL) */}
+            <View className="flex-row-reverse gap-3">
+              <TouchableOpacity
+                onPress={() =>
+                  Linking.openURL(`tel:${viewingOrder?.customerPhone}`)
+                }
+                className="flex-[2] bg-emerald-500 py-4 rounded-2xl flex-row items-center justify-center"
+              >
+                <Text className="text-white font-black text-lg ml-2">
+                  إتصال بالزبون
+                </Text>
+                <Phone size={20} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setViewingOrder(null)}
+                className="flex-1 bg-slate-100 py-4 rounded-2xl items-center justify-center"
+              >
+                <Text className="text-slate-900 font-black">إغلاق</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
