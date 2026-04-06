@@ -88,6 +88,7 @@ const ConfirmerDashboard = () => {
     wilaya: "باتنة",
     address: "حي الرياض",
     deliveryPrice: 0,
+    notes: "لا يوجد ملاحظات",
     items: [] as any[],
   });
 
@@ -364,6 +365,7 @@ const ConfirmerDashboard = () => {
                   address: "حي الرياض",
                   deliveryPrice: parseInt(defaultWilaya?.deliveryPrice || "0"),
                   items: [],
+                  notes: "",
                 });
                 setShowForm(true);
               }}
@@ -595,6 +597,7 @@ const ConfirmerDashboard = () => {
                           address: order.address,
                           deliveryPrice: order.deliveryPrice,
                           items: [...order.items],
+                          notes: order.notes,
                         });
                         setShowForm(true);
                       }}
@@ -610,7 +613,6 @@ const ConfirmerDashboard = () => {
         )}
       </ScrollView>
 
-      {/* --- Details Modal --- */}
       {/* --- Detailed Order Modal (Arabic Optimized) --- */}
       <Modal
         visible={!!viewingOrder}
@@ -659,6 +661,15 @@ const ConfirmerDashboard = () => {
                     </Text>
                     <Phone size={20} color="#10b981" />
                   </TouchableOpacity>
+                </View>
+
+                <View className="mt-4 px-2">
+                  <Text className="text-slate-900 text-xl font-bold mb-3">
+                    {"ملاحظات الزبون:"}
+                  </Text>
+                  <Text className="text-emerald-600 font-black ml-3 text-lg">
+                    {viewingOrder?.notes}
+                  </Text>
                 </View>
               </View>
 
@@ -835,6 +846,18 @@ const ConfirmerDashboard = () => {
                 multiline
                 value={formData.address}
                 onChangeText={(t) => setFormData({ ...formData, address: t })}
+              />
+
+              <Text className="text-slate-400 font-bold mb-1">ملاحظات</Text>
+              <TextInput
+                placeholder="اكتب أي ملاحظات هنا..."
+                placeholderTextColor="#94a3b8"
+                multiline={true}
+                numberOfLines={4}
+                textAlignVertical="top" // Important for Android to start text at the top
+                className="bg-slate-50 p-5 rounded-[2rem] font-bold text-right text-slate-800 border border-slate-100 min-h-[120px]"
+                onChangeText={(t) => setFormData({ ...formData, notes: t })}
+                value={formData.notes}
               />
               <Text className="text-slate-400 font-bold mb-1">
                 حقوق التوصيل

@@ -3,9 +3,6 @@ import { getErrorMessage } from "@/src/utils/errorHelper";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { teamMember } from "./userSlice";
 
-
-
-
 export const addNewUser = createAsyncThunk<
   any,
   { formdata: any },
@@ -20,21 +17,17 @@ export const addNewUser = createAsyncThunk<
   }
 });
 
-
-
-
-
 export const getTeamMembers = createAsyncThunk<
-    teamMember[],
-    void,
-    { rejectValue: string }
+  teamMember[],
+  void,
+  { rejectValue: string }
 >("supervisor/getTeam", async (_, { rejectWithValue }) => {
-    try {
-        const { data } = await api.get("/supervisor/team");
-        return data.team;
-    } catch (error: unknown) {
-        return rejectWithValue(getErrorMessage(error));
-    }
+  try {
+    const { data } = await api.get("/supervisor/team");
+    return data.team;
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error));
+  }
 });
 
 export const desactivateUser = createAsyncThunk<
@@ -65,7 +58,7 @@ export const activateUser = createAsyncThunk<
 
 export const updateMember = createAsyncThunk<
   any,
-  { id: string, memberInfo: any },
+  { id: string; memberInfo: any },
   { rejectValue: string }
 >("users/updateUser", async ({ id, memberInfo }, { rejectWithValue }) => {
   try {
@@ -76,12 +69,9 @@ export const updateMember = createAsyncThunk<
   }
 });
 
-
-
-
 export const updateUserProfileInfo = createAsyncThunk<
   any,
-  { id: string, userInfo: any },
+  { id: string; userInfo: any },
   { rejectValue: string }
 >("users/updateUserInfo", async ({ id, userInfo }, { rejectWithValue }) => {
   try {

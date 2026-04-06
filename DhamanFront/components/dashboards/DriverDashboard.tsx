@@ -1,51 +1,51 @@
-import React, { useState, useEffect, useMemo } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  Linking,
-  RefreshControl,
-  Modal,
-} from "react-native";
-import {
-  Truck,
-  MapPin,
-  Phone,
-  CheckCircle2,
-  Navigation,
-  BellRing,
-  LogOut,
-  User,
-  Package,
-  Calendar,
-  ChevronDown,
-  RefreshCw,
-  RotateCcw,
-  X,
-  Clock,
-} from "lucide-react-native";
-import { useSelector, useDispatch } from "react-redux";
-import { AppDispatch, RootState } from "@/src/store/store";
-import { logout } from "../../src/features/auth/authSlice";
-import { StatusBar } from "expo-status-bar";
 import { logoutUser } from "@/src/features/auth/authActions";
-import { useRouter } from "expo-router";
 import {
   acceptOrderByDriver,
   getDriverOrders,
   sendArrivalNotification,
   updateOrderStatusByDriver,
 } from "@/src/features/orders/orderActions";
+import { AppDispatch, RootState } from "@/src/store/store";
 import {
   ORDER_STATUS_LABELS_AR,
   OrderStatusKey,
   TAX_RATE,
 } from "@/src/utils/utility";
-import { io, Socket } from "socket.io-client"; // 1. Added Socket Import
 import { Audio } from "expo-av";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import {
+  BellRing,
+  Calendar,
+  CheckCircle2,
+  ChevronDown,
+  Clock,
+  LogOut,
+  MapPin,
+  Navigation,
+  Package,
+  Phone,
+  RefreshCw,
+  RotateCcw,
+  Truck,
+  User,
+  X,
+} from "lucide-react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Linking,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { io, Socket } from "socket.io-client"; // 1. Added Socket Import
+import { logout } from "../../src/features/auth/authSlice";
 
 type FilterPeriod = "today" | "lastMonth" | "lastSixMonths" | "lastYear";
 
@@ -86,7 +86,17 @@ export default function DriverDashboard() {
   useEffect(() => {
     if (!driver?.wilaya) return;
 
-    socket.emit("join_wilaya", driver.wilaya);
+    const joinRomm = () => {
+      console.log("joining room for wilaya : " + driver.wilaya);
+      socket.emit("join_wilaya", driver.wilaya);
+    };
+    // join immediatly if connected
+    if (socket.connected) {
+      joinRomm();
+    }
+
+    // 3. IMPORTANT: Re-join automatically if the internet drops and reconnects
+    socket.on("connect", joinRomm);
 
     socket.on("NEW_ORDER_POPUP", async (data) => {
       setIncomingOrder(data);
@@ -96,7 +106,8 @@ export default function DriverDashboard() {
     });
 
     return () => {
-      socket.disconnect();
+      socket.off("connect", joinRomm);
+      socket.off("NEW_ORDER_POPUP");
     };
   }, [driver?.wilaya]);
 

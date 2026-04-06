@@ -1,58 +1,70 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Modal,
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  Image,
-} from "react-native";
-import {
-  Users,
-  Package,
-  ShieldCheck,
-  MapPin,
-  Plus,
-  X,
-  Pencil,
-  Eye,
-  EyeOff,
-  ChevronDown,
-  Phone,
-  Mail,
-  UserX,
-  UserPlus,
-  XCircle,
-} from "lucide-react-native";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/src/store/store";
-import { StatusBar } from "expo-status-bar";
-import {
-  addNewUser,
-  getTeamMembers,
-  desactivateUser,
-  updateMember,
-  activateUser,
-} from "@/src/features/user/userActions";
 import { geSupservisortOrders } from "@/src/features/orders/orderActions";
+import {
+  addProduct,
+  getSupervisorProducts,
+  ProductInsertBody,
+} from "@/src/features/products/productActions";
+import {
+  activateUser,
+  addNewUser,
+  desactivateUser,
+  getTeamMembers,
+  updateMember,
+} from "@/src/features/user/userActions";
+import { AppDispatch, RootState } from "@/src/store/store";
 import {
   ORDER_STATUS_LABELS_AR,
   OrderStatusKey,
   ROLE_LABELS_AR,
 } from "@/src/utils/utility";
 import { WILAYAS } from "@/src/utils/wilayas";
+import { StatusBar } from "expo-status-bar";
+import {
+  Car,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Mail,
+  MapPin,
+  Package,
+  Pencil,
+  Phone,
+  Plus,
+  ShieldCheck,
+  UserPlus,
+  Users,
+  UserX,
+  X,
+  XCircle,
+} from "lucide-react-native";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Linking,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function SupervisorDashboard() {
   const { user: supervisor } = useSelector((state: RootState) => state.auth);
   const { team, loading } = useSelector((state: RootState) => state.users);
+  const { products, loadingAddingProduct } = useSelector(
+    (state: RootState) => state.products,
+  );
   const { orders } = useSelector((state: RootState) => state.orders);
   const dispatch = useDispatch<AppDispatch>();
 
-  const [activeTab, setActiveTab] = useState<"orders" | "team">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "team" | "products">(
+    "orders",
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [viewingOrder, setViewingOrder] = useState<any>(null);
   const [viewingMember, setViewingMember] = useState<any>(null);
@@ -60,9 +72,18 @@ export default function SupervisorDashboard() {
 
   // Modal State for adding user
   const [showModal, setShowModal] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [productForm, setProductForm] = useState({
+    name: "",
+    sku: "",
+    basePrice: "",
+    stockQuantity: "",
+    category: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
   const [showEditRolePicker, setShowEditRolePicker] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [showWilayaPicker, setShowWilayaPicker] = useState(false);
   const [wilayaSearch, setWilayaSearch] = useState("");
 
@@ -71,6 +92,12 @@ export default function SupervisorDashboard() {
       w.ar_name.includes(wilayaSearch) ||
       w.code.toString().includes(wilayaSearch),
   );
+  const itemsPerPage = 6; // How many products to show at once
+  // Logic to get current items
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(products.length / itemsPerPage);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -80,6 +107,7 @@ export default function SupervisorDashboard() {
     phone: "",
     role: "" as keyof typeof ROLE_LABELS_AR | "",
     wilaya: "",
+    Car_Id: "",
   });
 
   useEffect(() => {
@@ -89,8 +117,10 @@ export default function SupervisorDashboard() {
   const fetchData = async () => {
     if (activeTab === "orders") {
       await dispatch(geSupservisortOrders()).unwrap();
-    } else {
+    } else if (activeTab === "team") {
       await dispatch(getTeamMembers()).unwrap();
+    } else if (activeTab === "products") {
+      await dispatch(getSupervisorProducts()).unwrap();
     }
   };
 
@@ -98,8 +128,10 @@ export default function SupervisorDashboard() {
     setRefreshing(true);
     if (activeTab === "orders") {
       await dispatch(geSupservisortOrders());
-    } else {
+    } else if (activeTab === "team") {
       await dispatch(getTeamMembers()).unwrap();
+    } else if (activeTab === "products") {
+      await dispatch(getSupervisorProducts()).unwrap();
     }
     setRefreshing(false);
   };
@@ -149,6 +181,7 @@ export default function SupervisorDashboard() {
         phone: "",
         role: "",
         wilaya: "",
+        Car_Id: "",
       });
       Alert.alert("نجاح", "تم إضافة الموظف بنجاح");
     } catch (err: any) {
@@ -204,6 +237,77 @@ export default function SupervisorDashboard() {
     }
   };
 
+  const handleAddProduct = async () => {
+    // Simple validation to ensure required fields aren't empty
+    if (!productForm.name || !productForm.sku || !productForm.basePrice) {
+      Alert.alert("تنبيه", "يرجى ملء الحقول الأساسية");
+      return;
+    }
+
+    try {
+      // Convert strings from TextInput to Numbers for the API
+      const productData: ProductInsertBody = {
+        name: productForm.name,
+        sku: productForm.sku.toUpperCase(), // Best practice for SKUs
+        basePrice: Number(productForm.basePrice),
+        stockQuantity: Number(productForm.stockQuantity) || 0,
+        category: productForm.category,
+      };
+
+      await dispatch(addProduct({ formdata: productData })).unwrap();
+
+      Alert.alert("نجاح", "تمت إضافة المنتج بنجاح");
+
+      // Reset form and close modal
+      setProductForm({
+        name: "",
+        sku: "",
+        basePrice: "",
+        stockQuantity: "",
+        category: "",
+      });
+      setShowProductModal(false);
+      setCurrentPage(1); // Go to page 1 to see the new product
+    } catch (error) {
+      Alert.alert(
+        "خطأ",
+        typeof error === "string" ? error : "فشل في إضافة المنتج",
+      );
+    }
+  };
+  // --- Statistics Logic ---
+  const stats = {
+    total: orders.length,
+    confirmed: orders.filter((o: any) => o.status === "CONFIRMED").length,
+    cancelled: orders.filter((o: any) => o.status === "CANCELLED").length,
+    pending: orders.filter((o: any) => o.status === "PENDING").length,
+    delivered: orders.filter((o: any) => o.status === "DELIVERED").length,
+    // Calculate total revenue from delivered orders
+    totalRevenue: orders
+      .filter((o: any) => o.status === "DELIVERED")
+      .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0),
+  };
+
+  // Calculate percentages for the progress bars
+  const cancellationRate =
+    stats.total > 0 ? (stats.cancelled / stats.total) * 100 : 0;
+  const confirmationRate =
+    stats.total > 0 ? (stats.confirmed / stats.total) * 100 : 0;
+
+  const StatCard = ({ label, value, color, icon: Icon }: any) => (
+    <View className="flex items-center bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex-1 m-1">
+      <View
+        className={`w-8 h-8 rounded-xl ${color} items-center justify-center mb-2`}
+      >
+        <Icon size={16} color="white" />
+      </View>
+      <Text className="text-slate-400 text-[10px] font-black mb-1">
+        {label}
+      </Text>
+      <Text className="text-slate-900 text-lg font-black">{value}</Text>
+    </View>
+  );
+
   return (
     <View className="flex-1 bg-slate-50" style={{ direction: "rtl" }}>
       <StatusBar style="light" />
@@ -254,6 +358,21 @@ export default function SupervisorDashboard() {
               فريق العمل
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setActiveTab("products")}
+            className={`flex-1 py-3 rounded-xl flex-row-reverse justify-center items-center gap-2 ${activeTab === "products" ? "bg-white" : ""}`}
+          >
+            <Package
+              size={16}
+              color={activeTab === "products" ? "#0f172a" : "#94a3b8"}
+            />
+            <Text
+              className={`font-black text-xs ${activeTab === "products" ? "text-slate-900" : "text-slate-400"}`}
+            >
+              المنتجات
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -268,6 +387,76 @@ export default function SupervisorDashboard() {
           />
         }
       >
+        {/* 1. Statistics Cards Grid */}
+        <View className="flex-row flex-wrap mb-2">
+          <StatCard
+            label="المجموع"
+            value={stats.total}
+            color="bg-slate-800"
+            icon={Package}
+          />
+          <StatCard
+            label="ملغاة"
+            value={stats.cancelled}
+            color="bg-rose-500"
+            icon={XCircle}
+          />
+          <StatCard
+            label="مؤكدة"
+            value={stats.confirmed}
+            color="bg-emerald-500"
+            icon={ShieldCheck}
+          />
+          <StatCard
+            label="معلقة"
+            value={stats.pending}
+            color="bg-amber-500"
+            icon={ActivityIndicator}
+          />
+        </View>
+
+        {/* 2. Progress Visualizer */}
+        <View className="bg-white p-5 rounded-[32px] mb-6 border border-slate-100 shadow-sm mx-1">
+          <Text className="text-slate-900 font-black mb-4  text-xs">
+            تحليل الأداء العام
+          </Text>
+          <View className="mb-4">
+            <View className="flex-row-reverse justify-between mb-1">
+              <Text className="text-slate-400 text-[10px] font-bold">
+                نسبة التأكيد
+              </Text>
+              <Text className="text-emerald-600 text-[10px] font-black">
+                {confirmationRate.toFixed(1)}%
+              </Text>
+            </View>
+            <View className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <View
+                style={{ width: `${confirmationRate}%` }}
+                className="h-full bg-emerald-500"
+              />
+            </View>
+          </View>
+          <View>
+            <View className="flex-row-reverse justify-between mb-1">
+              <Text className="text-slate-400 text-[10px] font-bold">
+                نسبة الإلغاء
+              </Text>
+              <Text className="text-rose-600 text-[10px] font-black">
+                {cancellationRate.toFixed(1)}%
+              </Text>
+            </View>
+            <View className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <View
+                style={{ width: `${cancellationRate}%` }}
+                className="h-full bg-rose-500"
+              />
+            </View>
+          </View>
+        </View>
+
+        <Text className="text-slate-400 font-black mb-4 mr-2  text-xs">
+          آخر الطلبيات
+        </Text>
         {loading && !refreshing ? (
           <ActivityIndicator size="large" color="#0f172a" className="mt-10" />
         ) : activeTab === "orders" ? (
@@ -322,6 +511,106 @@ export default function SupervisorDashboard() {
               </View>
             </View>
           ))
+        ) : activeTab === "products" ? (
+          <View>
+            <TouchableOpacity
+              onPress={() => setShowProductModal(true)}
+              className="bg-slate-900 py-4 rounded-2xl flex-row-reverse justify-center items-center gap-2 mb-6 shadow-lg shadow-emerald-500/10"
+            >
+              <Plus size={20} color="#10b981" />
+              <Text className="text-white font-black">إضافة منتج جديد</Text>
+            </TouchableOpacity>
+
+            {products.length === 0 ? (
+              <View className="bg-white rounded-[32px] p-12 items-center border border-dashed border-slate-200">
+                <Package size={48} color="#cbd5e1" />
+                <Text className="text-slate-400 font-bold mt-4 text-center">
+                  لا توجد منتجات حالياً{products.length}
+                </Text>
+              </View>
+            ) : (
+              <>
+                {/* Products Grid */}
+                <View className="flex-row flex-wrap justify-between">
+                  {currentProducts.map((product: any) => (
+                    <View
+                      key={product._id}
+                      className="w-[48%] bg-white rounded-[24px] p-4 mb-4 border border-slate-100 shadow-sm"
+                    >
+                      <View className="bg-slate-50 w-10 h-10 rounded-xl items-center justify-center mb-3">
+                        <Package size={20} color="#64748b" />
+                      </View>
+
+                      <View className="flex ">
+                        <Text
+                          className="text-slate-900 font-black text-sm mb-1"
+                          numberOfLines={1}
+                        >
+                          {product.name}
+                        </Text>
+
+                        <Text className="text-slate-400 text-[10px] font-bold mb-3">
+                          {product.sku}
+                        </Text>
+                      </View>
+
+                      <View className="flex-row-reverse justify-between items-center pt-3 border-t border-slate-50">
+                        <Text className="text-emerald-600 font-black text-xs">
+                          {product.basePrice} دج
+                        </Text>
+                        <View className="bg-slate-100 px-2 py-1 rounded-md">
+                          <Text className="text-slate-600 font-bold text-[9px]">
+                            📦 {product.stockQuantity}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <View className="flex-row justify-center items-center gap-4 mt-4 mb-10">
+                    <TouchableOpacity
+                      disabled={currentPage === totalPages}
+                      onPress={() => setCurrentPage((prev) => prev + 1)}
+                      className={`p-3 rounded-xl ${currentPage === totalPages ? "bg-slate-100" : "bg-white border border-slate-200"}`}
+                    >
+                      <Text
+                        className={
+                          currentPage === totalPages
+                            ? "text-slate-300"
+                            : "text-slate-900"
+                        }
+                      >
+                        التالي
+                      </Text>
+                    </TouchableOpacity>
+
+                    <Text className="font-black text-slate-500">
+                      {currentPage} / {totalPages}
+                    </Text>
+
+                    <TouchableOpacity
+                      disabled={currentPage === 1}
+                      onPress={() => setCurrentPage((prev) => prev - 1)}
+                      className={`p-3 rounded-xl ${currentPage === 1 ? "bg-slate-100" : "bg-white border border-slate-200"}`}
+                    >
+                      <Text
+                        className={
+                          currentPage === 1
+                            ? "text-slate-300"
+                            : "text-slate-900"
+                        }
+                      >
+                        السابق
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
         ) : (
           <View>
             <TouchableOpacity
@@ -483,6 +772,17 @@ export default function SupervisorDashboard() {
               </View>
             )}
 
+            {/* in case is a driver he can edit the car_id just an input field */}
+            {editingMember?.role === "DRIVER" && (
+              <TextInput
+                placeholder="رقم السيارة"
+                value={editingMember?.Car_Id}
+                className="bg-slate-50 p-4 rounded-2xl mb-3 font-bold text-right"
+                onChangeText={(t) =>
+                  setEditingMember({ ...editingMember, car_id: t })
+                }
+              />
+            )}
             <TouchableOpacity
               onPress={handleUpdateMember}
               className="bg-slate-900 py-5 rounded-3xl items-center mb-10"
@@ -526,12 +826,21 @@ export default function SupervisorDashboard() {
                 </Text>
               </View>
 
-              <View className="flex-row-reverse items-center">
+              <View className="flex-row-reverse items-center mb-4">
                 <View className="bg-amber-500/10 p-2 rounded-xl mr-2">
                   <Phone size={20} color="#f59e0b" />
                 </View>
                 <Text className="text-slate-600 font-bold mr-3 flex-1 text-right">
                   {viewingMember?.phone || "غير متوفر"}
+                </Text>
+              </View>
+
+              <View className="flex-row-reverse items-center">
+                <View className="bg-amber-500/10 p-2 rounded-xl mr-2">
+                  <Car size={20} color="#10b981" />
+                </View>
+                <Text className="text-slate-600 font-bold mr-3 flex-1 text-right">
+                  {viewingMember?.Car_Id || "غير متوفر"}
                 </Text>
               </View>
             </View>
@@ -546,63 +855,184 @@ export default function SupervisorDashboard() {
         </View>
       </Modal>
 
-      {/* --- Order Details Modal --- */}
       <Modal
         visible={!!viewingOrder}
         animationType="slide"
         transparent
         onRequestClose={() => setViewingOrder(null)}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="bg-white rounded-t-[3rem] p-8 shadow-2xl">
+        <View className="flex-1 justify-end bg-black/60">
+          <View className="bg-white rounded-t-[3rem] p-6 shadow-2xl h-[90%]">
+            {/* Handle Bar */}
             <View className="w-12 h-1.5 bg-slate-200 rounded-full self-center mb-6" />
-            <Text className="text-slate-900 text-xl font-black mb-6">
-              تفاصيل الطلبية
-            </Text>
-            <View className="bg-slate-50 rounded-3xl p-5 mb-5 border border-slate-100">
-              <View className="flex-row items-center mb-2">
-                <Package size={18} color="#10b981" />
-                <Text className="text-slate-800 font-black mr-2">
-                  قائمة المنتجات:
-                </Text>
-              </View>
-              {viewingOrder?.items?.map((item: any, index: number) => (
-                <View
-                  key={index}
-                  className={`flex-row justify-between items-center py-3 ${index !== viewingOrder.items.length - 1 ? "border-b border-slate-200/50" : ""}`}
-                >
-                  <Text className="text-slate-700 font-bold text-[16px] flex-1">
-                    {item.productName}
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Header: Order Number & Status (RTL) */}
+              <View className="flex-row justify-between items-center mb-6">
+                <View className="flex-row items-center">
+                  <Text className="text-slate-400 text-xl font-bold">
+                    رقم الطلبية:
                   </Text>
-                  <View className="bg-emerald-100 px-3 py-1 rounded-lg">
-                    <Text className="text-emerald-700 font-black text-[14px]">
-                      {item.priceAtTimeOfOrder} دج{" "}
-                      <Text className="text-red-600">x{item.quantity}</Text>
+                  <Text className="text-slate-900 text-xl font-black">
+                    #{viewingOrder?.orderNumber}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Section 1: Customer Details (RTL) */}
+              <View className="bg-slate-50 rounded-[2rem] p-5 mb-4 border border-slate-100">
+                <View className="flex-row items-center mb-4">
+                  <Text className="text-slate-800 font-black mr-3 text-lg">
+                    بيانات الزبون
+                  </Text>
+                </View>
+
+                <View className="px-2">
+                  <Text className="text-slate-900 text-xl font-bold mb-3">
+                    {viewingOrder?.customerName}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      Linking.openURL(`tel:${viewingOrder?.customerPhone}`)
+                    }
+                    className="flex-row items-center bg-white px-5 py-3 rounded-2xl border border-slate-200 w-full justify-center"
+                  >
+                    <Text className="text-emerald-600 font-black ml-3 text-lg">
+                      {viewingOrder?.customerPhone}
+                    </Text>
+                    <Phone size={20} color="#10b981" />
+                  </TouchableOpacity>
+                </View>
+
+                <View className="mt-4 px-2">
+                  <Text className="text-slate-900 text-xl font-bold mb-3">
+                    {"ملاحظات الزبون:"}
+                  </Text>
+                  <Text className="text-emerald-600 font-black ml-3 text-lg">
+                    {viewingOrder?.notes}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Section 2: Items List (RTL) */}
+              <View className="bg-slate-50 rounded-[2rem] p-5 mb-4 border border-slate-100">
+                <View className="flex-row items-center mb-4">
+                  <View className="bg-blue-500/10 p-2 rounded-lg">
+                    <Package size={18} color="#3b82f6" />
+                  </View>
+                  <Text className="text-slate-800 font-black mr-3 text-lg">
+                    قائمة المنتجات
+                  </Text>
+                </View>
+
+                {viewingOrder?.items?.map((item: any, index: number) => (
+                  <View
+                    key={index}
+                    className={`flex-row-reverse justify-between items-center py-4 ${index !== viewingOrder.items.length - 1 ? "border-b border-slate-200/50" : ""}`}
+                  >
+                    <View className="items-end flex-1 mr-3">
+                      <Text className="text-slate-800 font-bold text-base text-right">
+                        {item.productName}
+                      </Text>
+                      <Text className="text-slate-400 text-xs text-right">
+                        {item.priceAtTimeOfOrder} دج للمنتج
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center">
+                      <Text className="text-slate-900 font-black text-base">
+                        {item.priceAtTimeOfOrder * item.quantity} دج
+                      </Text>
+                      <View className="bg-slate-200 px-2 py-1 rounded-md ml-3">
+                        <Text className="text-slate-700 font-bold text-xs">
+                          x{item.quantity}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+
+              {/* Section 3: Shipping & Time (RTL) */}
+              <View className="bg-slate-50 rounded-[2rem] p-5 mb-4 border border-slate-100">
+                <View className="flex-row items-center mb-4">
+                  <View className="bg-rose-500/10 p-2 rounded-lg">
+                    <MapPin size={18} color="#f43f5e" />
+                  </View>
+                  <Text className="text-slate-800 font-black mr-3 text-lg">
+                    معلومات التوصيل والوقت
+                  </Text>
+                </View>
+                <View className="items-end px-2 space-y-3">
+                  <View className="flex-row justify-between w-full">
+                    <Text className="text-slate-400">الولاية:</Text>
+                    <Text className="text-slate-800 font-bold">
+                      {viewingOrder?.wilaya}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between w-full">
+                    <Text className="text-slate-400">العنوان:</Text>
+                    <Text className="text-slate-800 font-bold text-right">
+                      {viewingOrder?.address || "غير محدد"}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between w-full pt-3 border-t border-slate-200">
+                    <Text className="text-slate-400">تاريخ الإنشاء:</Text>
+                    <Text className="text-slate-600 text-xs font-bold">
+                      {new Date(viewingOrder?.createdAt).toLocaleDateString(
+                        "ar-DZ",
+                      )}
                     </Text>
                   </View>
                 </View>
-              ))}
-            </View>
-            <View className="bg-slate-50 rounded-3xl p-5 mb-8 border border-slate-100">
-              <View className="flex-row items-center mb-3">
-                <MapPin size={18} color="#10b981" />
-                <Text className="text-slate-800 font-black mr-2">
-                  معلومات التوصيل:
-                </Text>
               </View>
-              <Text className="text-slate-700 font-bold">
-                الولاية: {viewingOrder?.wilaya}
-              </Text>
-              <Text className="text-slate-500 font-bold mt-1">
-                العنوان: {viewingOrder?.address || "غير محدد"}
-              </Text>
+
+              {/* Section 4: Price Summary (Arabic Styled) */}
+              <View className="bg-slate-900 rounded-[2rem] p-6 mb-8 shadow-xl">
+                <View className="flex-row justify-between mb-3">
+                  <Text className="text-slate-400">سعر السلع:</Text>
+                  <Text className="text-white font-bold">
+                    {viewingOrder?.totalAmount -
+                      (viewingOrder?.deliveryPrice || 0)}{" "}
+                    دج
+                  </Text>
+                </View>
+                <View className="flex-row justify-between mb-4 pb-4 border-b border-white/10">
+                  <Text className="text-slate-400">تكلفة التوصيل:</Text>
+                  <Text className="text-emerald-400 font-bold">
+                    {viewingOrder?.deliveryPrice || 0} دج
+                  </Text>
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-white font-black text-xl">
+                    المبلغ الإجمالي:
+                  </Text>
+                  <Text className="text-emerald-400 font-black text-2xl">
+                    {viewingOrder?.totalAmount} دج
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Bottom Actions (RTL) */}
+            <View className="flex-row-reverse gap-3">
+              <TouchableOpacity
+                onPress={() =>
+                  Linking.openURL(`tel:${viewingOrder?.customerPhone}`)
+                }
+                className="flex-[2] bg-emerald-500 py-4 rounded-2xl flex-row items-center justify-center"
+              >
+                <Text className="text-white font-black text-lg ml-2">
+                  إتصال بالزبون
+                </Text>
+                <Phone size={20} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setViewingOrder(null)}
+                className="flex-1 bg-slate-100 py-4 rounded-2xl items-center justify-center"
+              >
+                <Text className="text-slate-900 font-black">إغلاق</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              onPress={() => setViewingOrder(null)}
-              className="bg-slate-900 py-4 rounded-2xl items-center mb-4"
-            >
-              <Text className="text-white font-black text-base">إغلاق</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -784,11 +1214,116 @@ export default function SupervisorDashboard() {
                 </View>
               )}
 
+              {/* New Step: Conditional Car ID */}
+              {formData.role === "DRIVER" && (
+                <View>
+                  <Text className="text-slate-400 font-bold mb-1 mr-2">
+                    معلومات المركبة
+                  </Text>
+                  <TextInput
+                    placeholder="رقم السيارة"
+                    className="bg-emerald-50 p-4 rounded-2xl mb-3 font-bold text-right border border-emerald-100"
+                    onChangeText={(t) => setFormData({ ...formData, Car_I: t })}
+                  />
+                </View>
+              )}
               <TouchableOpacity
                 onPress={handleAddUser}
                 className="bg-slate-900 py-5 rounded-3xl items-center mt-4 mb-10"
               >
                 <Text className="text-white font-black">حفظ البيانات</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- Add Product Modal --- */}
+      <Modal visible={showProductModal} animationType="slide" transparent>
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-[40px] p-8">
+            <View className="flex-row justify-between items-center mb-6">
+              <Text className="text-xl font-black text-slate-900">
+                إضافة منتج جديد
+              </Text>
+              <TouchableOpacity onPress={() => setShowProductModal(false)}>
+                <XCircle size={24} color="#0f172a" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text className="text-slate-400 font-bold mb-2 text-xs">
+                اسم المنتج
+              </Text>
+              <TextInput
+                placeholder="مثال: ساعة ذكية X1"
+                value={productForm.name}
+                onChangeText={(t) =>
+                  setProductForm({ ...productForm, name: t })
+                }
+                className="bg-slate-50 p-4 rounded-2xl mb-4 font-bold text-right border border-slate-100"
+              />
+
+              <Text className="text-slate-400 font-bold mb-2 text-xs">
+                رمز المنتج (SKU)
+              </Text>
+              <TextInput
+                placeholder="SKU-123"
+                value={productForm.sku}
+                onChangeText={(t) => setProductForm({ ...productForm, sku: t })}
+                className="bg-slate-50 p-4 rounded-2xl mb-4 font-bold text-right border border-slate-100"
+              />
+
+              <View className="flex-row-reverse gap-3 mb-4">
+                <View className="flex-1">
+                  <Text className="text text-slate-400 font-bold mb-2 text-xs">
+                    السعر الأساسي
+                  </Text>
+                  <TextInput
+                    placeholder="0.00"
+                    keyboardType="numeric"
+                    value={productForm.basePrice}
+                    onChangeText={(t) =>
+                      setProductForm({ ...productForm, basePrice: t })
+                    }
+                    className="bg-slate-50 p-4 rounded-2xl font-bold text-right border border-slate-100"
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-slate-400 font-bold mb-2 text-xs">
+                    الكمية المتوفرة
+                  </Text>
+                  <TextInput
+                    placeholder="0"
+                    keyboardType="numeric"
+                    value={productForm.stockQuantity}
+                    onChangeText={(t) =>
+                      setProductForm({ ...productForm, stockQuantity: t })
+                    }
+                    className="bg-slate-50 p-4 rounded-2xl font-bold text-right border border-slate-100"
+                  />
+                </View>
+              </View>
+
+              <Text className="text-slate-400 font-bold mb-2 text-xs">
+                الفئة (اختياري)
+              </Text>
+              <TextInput
+                placeholder="إلكترونيات، ملابس..."
+                value={productForm.category}
+                onChangeText={(t) =>
+                  setProductForm({ ...productForm, category: t })
+                }
+                className="bg-slate-50 p-4 rounded-2xl mb-8 font-bold text-right border border-slate-100"
+              />
+
+              <TouchableOpacity
+                onPress={handleAddProduct}
+                className="bg-emerald-500 py-5 rounded-3xl items-center mb-10 shadow-lg shadow-emerald-500/20"
+              >
+                <Text className="text-white font-black text-lg">
+                  {loadingAddingProduct ? "جاري إضافة..." : "تأكيد الإضافة"}
+                </Text>
               </TouchableOpacity>
             </ScrollView>
           </View>

@@ -1,5 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { activateUser, addNewUser, desactivateUser, getTeamMembers, updateMember, updateUserProfileInfo } from "./userActions";
+import {
+  activateUser,
+  addNewUser,
+  desactivateUser,
+  getTeamMembers,
+  updateMember,
+  updateUserProfileInfo,
+} from "./userActions";
 
 export interface User {
   id: string;
@@ -8,6 +15,8 @@ export interface User {
   profileImageUrl?: string;
   phone: string;
   role: string;
+  wilaya: string;
+  Car_Id: string;
 }
 export interface teamMember {
   _id: string;
@@ -16,6 +25,8 @@ export interface teamMember {
   profileImageUrl?: string;
   phone: string;
   role: string;
+  Car_Id: string;
+  wilaya: string;
 }
 
 interface AuthState {
@@ -81,11 +92,7 @@ const userSlice = createSlice({
         const updatedMemberIndex = state.team.findIndex(
           (member) => member._id === updatedMember._id,
         );
-        state.team.splice(
-          updatedMemberIndex,
-          1,
-          updatedMember,
-        )
+        state.team.splice(updatedMemberIndex, 1, updatedMember);
         state.error = null;
       })
       .addCase(desactivateUser.rejected, (state, action) => {
@@ -103,11 +110,7 @@ const userSlice = createSlice({
         const updatedMemberIndex = state.team.findIndex(
           (member) => member._id === updatedMember._id,
         );
-        state.team.splice(
-          updatedMemberIndex,
-          1,
-          updatedMember,
-        )
+        state.team.splice(updatedMemberIndex, 1, updatedMember);
         state.error = null;
       })
       .addCase(activateUser.rejected, (state, action) => {
@@ -126,11 +129,7 @@ const userSlice = createSlice({
         const updatedMemberIndex = state.team.findIndex(
           (member) => member._id === updatedMember._id,
         );
-        state.team.splice(
-          updatedMemberIndex,
-          1,
-          updatedMember,
-        )
+        state.team.splice(updatedMemberIndex, 1, updatedMember);
         state.error = null;
       })
       .addCase(updateMember.rejected, (state, action) => {
@@ -149,7 +148,7 @@ const userSlice = createSlice({
       .addCase(updateUserProfileInfo.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "خطاء في تعديل المستخدم";
-      })
+      });
   },
 });
 

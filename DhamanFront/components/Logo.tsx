@@ -1,11 +1,16 @@
-import { ShieldCheck } from "lucide-react-native";
 import React from "react";
 import { Image, View } from "react-native";
 
 const Logo = () => {
   return (
-    <View className="w-24 h-24 bg-emerald-500 rounded-[30px] items-center justify-center shadow-xl shadow-emerald-500/40 mb-4">
-      <ShieldCheck size={50} color="white" strokeWidth={2.5} />
+    <View className="items-center justify-center my-8">
+      <View className="w-28 h-28 bg-white rounded-[2.5rem] shadow-xl items-center justify-center border border-slate-100 overflow-hidden">
+        <Image
+          source={require("../assets/images/logo.jpeg")}
+          className="w-full h-full"
+          resizeMode="cover"
+        />
+      </View>
     </View>
   );
 };

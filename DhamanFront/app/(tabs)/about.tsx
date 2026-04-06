@@ -1,20 +1,13 @@
+import Logo from "@/components/Logo";
+import { CheckCircle2, Globe, Layers, Mail } from "lucide-react-native";
 import React from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
   Linking,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import {
-  ShieldCheck,
-  Info,
-  Mail,
-  Globe,
-  Github,
-  Layers,
-  CheckCircle2,
-} from "lucide-react-native";
 import packageJson from "../../package.json";
 const AboutPage = () => {
   const appVersion = "1.0.0"; // Pull this from package.json if possible
@@ -37,7 +30,7 @@ const AboutPage = () => {
     <ScrollView className="flex-1 bg-slate-50">
       {/* 1. Brand Header */}
       <View className="bg-slate-900 pt-16 pb-12 px-6 rounded-b-[3.5rem] items-center shadow-2xl">
-        <View className="w-24 h-24 bg-emerald-500 rounded-[30px] items-center justify-center shadow-xl shadow-emerald-500/40 mb-4">
+        {/* <View className="w-24 h-24 bg-emerald-500 rounded-[30px] items-center justify-center shadow-xl shadow-emerald-500/40 mb-4">
           <ShieldCheck size={50} color="white" strokeWidth={2.5} />
         </View>
 
@@ -46,10 +39,11 @@ const AboutPage = () => {
             DHAMAN 
           </Text>
           <Text className="text-3xl font-black tracking-tighter text-blue-600">PRO</Text>
-        </View>
+        </View> */}
+        <Logo />
 
         <Text className="text-emerald-400 font-bold text-sm mt-1 uppercase tracking-widest">
-          Confirmation System
+          نظام تأكيد الطلبيات
         </Text>
       </View>
 

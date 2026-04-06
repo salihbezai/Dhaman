@@ -1,21 +1,21 @@
+import Logo from "@/components/Logo";
+import { loginUser } from "@/src/features/auth/authActions";
+import { AppDispatch, RootState } from "@/src/store/store";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { Eye, EyeOff, Lock, LogIn, User } from "lucide-react-native"; // Added Eye, EyeOff
+import { useEffect, useState } from "react";
 import {
-  View,
-  TextInput,
-  Pressable,
-  Text,
-  ScrollView,
   ActivityIndicator,
   Alert,
-  TouchableOpacity, // Added this
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { StatusBar } from "expo-status-bar";
 import { useDispatch, useSelector } from "react-redux";
-import Logo from "@/components/Logo";
-import { User, Lock, LogIn, Eye, EyeOff } from "lucide-react-native"; // Added Eye, EyeOff
-import { useState, useEffect } from "react";
-import { loginUser } from "@/src/features/auth/authActions";
-import { RootState, AppDispatch } from "@/src/store/store";
-import { useRouter } from "expo-router";
 
 export default function Login() {
   const dispatch = useDispatch<AppDispatch>();
@@ -62,9 +62,6 @@ export default function Login() {
 
         <View className="items-center mb-10">
           <Logo />
-          <Text className="text-2xl font-black text-slate-800">
-            DHAMAN <Text className="text-blue-600">PRO</Text>
-          </Text>
           <Text className="text-slate-400 text-[15px] font-bold uppercase tracking-widest mt-1">
             تسجيل الدخول
           </Text>
@@ -110,8 +107,10 @@ export default function Login() {
                 onChangeText={setPassword}
                 placeholder="أدخل كلمة السر"
                 placeholderTextColor="#94a3b8"
-                secureTextEntry={!showPassword} // Toggle secure text
-                className="w-full px-5 pr-12 pl-12 py-3.5 rounded-xl border border-slate-200 font-bold text-sm text-right"
+                secureTextEntry={!showPassword}
+                className="w-full px-5 pr-12 pl-12 py-3.5 rounded-xl border
+                 border-slate-200 font-bold text-sm text-right text-slate-900"
+                style={{ color: "#0f172a" }}
               />
               <Lock
                 size={18}
