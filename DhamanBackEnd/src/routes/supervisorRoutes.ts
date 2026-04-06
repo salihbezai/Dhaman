@@ -8,6 +8,7 @@ import {
   getAllOrders,
   createProduct, 
 } from '../controllers/supervisorController';
+import { getProducts } from '../controllers/confirmerController';
 
 const router = Router();
 
@@ -19,6 +20,8 @@ router.post('/users',protect, adminOnly, createUser);
 router.delete('/users/:id',protect, adminOnly, deleteUser);
 router.get('/orders', protect, adminOnly,getAllOrders);
 
+// get the products
+router.get('/products',protect,adminOnly, getProducts);
 
 // product
 router.post('/products',createProduct);

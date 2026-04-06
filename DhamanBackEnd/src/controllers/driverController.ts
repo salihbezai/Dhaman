@@ -3,6 +3,7 @@ import { Order, OrderStatus } from "../models/Order";
 import mongoose from "mongoose";
 import { NOTIFICATION_TYPES } from "../models/Notification";
 import { Notification as AppNotification } from "../models/Notification";
+import { Product } from "../models/Product";
 // 1. Fetch orders assigned to the specific driver
 export const getDriverOrders = async (req: Request, res: Response) => {
   try {
@@ -58,7 +59,22 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     // Auto-fill payment if delivered
     if (status === OrderStatus.DELIVERED) {
-      order.paymentReceived = order.totalAmount;
+      console.log("we here inside")
+      order.items.forEach((item) => {
+        console.log("the item " + JSON.stringify(item));
+        console.log("the product " + JSON.stringify(item.product));
+        console.log("product name "+item.productName)
+      });
+       order.paymentReceived = order.totalAmount;
+      // here we have to reduce the stock of each product based on the quantity delivered
+      await Promise.all(
+        order.items.map((item) =>
+          Product.findByIdAndUpdate(item.product, {
+            $inc: { stockQuantity: -item.quantity },
+          }).exec(),
+        ),
+      );
+     
     }
 
     await order.save();
@@ -103,10 +119,8 @@ export const markArrival = async (req: Request, res: Response) => {
     // 1. Grab the io instance from the app
     const io = req.app.get("socketio");
 
- 
-
     const confirmerId = order.confirmerId!.toString();
-    
+
     // 2. Target ONLY the room belonging to that specific Confirmer
     io.to(confirmerId).emit("NEW_NOTIFICATION_DRIVER", order);
 
@@ -143,14 +157,12 @@ export const acceptOrderByDriver = async (req: Request, res: Response) => {
       order.driverId === null ||
       order.driverId === ""
     ) {
-      return res
-        .status(400)
-        .json({
-          message: {
-            en: "Order already has a driver",
-            ar: "تم تعيين سائق لهذه الطلبية",
-          },
-        });
+      return res.status(400).json({
+        message: {
+          en: "Order already has a driver",
+          ar: "تم تعيين سائق لهذه الطلبية",
+        },
+      });
     }
     res.status(200).json({ order });
   } catch (err) {

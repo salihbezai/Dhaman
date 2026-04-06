@@ -32,11 +32,12 @@ interface NewUserResponseBody {
   profileImageUrl?: string;
   role: UserRole;
   wilaya: string;
+  car_id?: string;
   isActive: boolean;
 }
 
 export const addNewUser = async (req: Request, res: Response) => {
-  const { username, email, password, phone, role, wilaya } = req.body
+  const { username, email, password, phone, role, wilaya,car_id } = req.body
     .formdata as NewUserRequestBody;
   console.log("the body is " + JSON.stringify(req.body));
 
@@ -73,7 +74,8 @@ export const addNewUser = async (req: Request, res: Response) => {
       phone,
       profileImageUrl: `https://res.cloudinary.com/ddosc8sso/image/upload/v1772004959/profile_b9wucv.jpg`,
       role,
-      wilaya
+      wilaya,
+      Car_Id:car_id
     });
 
     await newUser.save();
@@ -87,7 +89,8 @@ export const addNewUser = async (req: Request, res: Response) => {
       profileImageUrl: newUser.profileImageUrl,
       role: newUser.role,
       isActive: newUser.isActive,
-      wilaya: newUser.wilaya
+      wilaya: newUser.wilaya,
+      car_id: newUser.Car_Id
     };
 
     res.status(201).json({ user });
@@ -181,7 +184,8 @@ export const setUserActif = async (req: Request, res: Response) => {
 
 export const updateMemberInfo = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { username, email, phone, role, wilaya } = req.body;
+  const { username, email, phone, role, wilaya, car_id } = req.body;
+  console.log("the car id is "+car_id)
   try {
     const user = await User.findById(id).select("-password -refreshTokens");
     if (!user) {
@@ -198,6 +202,7 @@ export const updateMemberInfo = async (req: Request, res: Response) => {
     user.phone = phone;
     user.role = role;
     user.wilaya = wilaya;
+    user.Car_Id = car_id
     await user.save();
 
     res.status(200).json({ user });

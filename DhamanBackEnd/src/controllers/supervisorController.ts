@@ -9,6 +9,7 @@ export const getTeam = async (req: Request, res: Response) => {
   const team = await User.find({ role: { $ne: UserRole.SUPERVISOR } })
   .select('-password -refreshTokens')
   .sort({ isActive: -1, username: 1 });
+  console.log(JSON.stringify(team));
   res.json({team});
 };
 
@@ -67,9 +68,9 @@ export const getAllOrders = async (req: Request, res: Response) => {
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, sku, basePrice, stockQuantity } = req.body;
-    const product = await Product.create({ name, sku, basePrice, stockQuantity });
-    res.status(201).json(product);
+    const { name, sku, basePrice, stockQuantity, category } = req.body;
+    const product = await Product.create({ name, sku, basePrice, stockQuantity, category });
+    res.status(201).json({newProduct: product});
   } catch (err) {
     res.status(400).json({ message: "Product creation failed" });
   }

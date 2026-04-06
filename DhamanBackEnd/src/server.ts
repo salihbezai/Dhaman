@@ -1,4 +1,4 @@
-const app = require("./app");
+import app from "./app";
 import connectDb from "./config/db";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
@@ -20,7 +20,10 @@ const io = new Server(server, {
 
 io.on("connection", (socket) => {
   socket.on("join_wilaya", (wilaya) => {
+    if(wilaya) {
     socket.join(wilaya);
+    console.log(`Driver joined wilaya ${wilaya}`);
+    }
   });
 
   socket.on("confirmer_join", (confirmerId) => {

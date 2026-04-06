@@ -20,6 +20,7 @@ interface IUser extends Document {
     updatedAt: Date;
   };
   wilaya: string;
+  Car_Id?: string;
   isActive: boolean;
 }
 
@@ -44,6 +45,7 @@ const userSchema = new Schema<IUser>(
       updatedAt: { type: Date, default: Date.now },
     },
     wilaya: { type: String, required: true },
+    Car_Id: { type: String },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true },

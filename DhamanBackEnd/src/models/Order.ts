@@ -35,6 +35,7 @@ interface IOrder extends Document {
   postponedDate?: Date;
   deliveryNotificationSent: boolean;
   paymentReceived: number;
+  notes?: string;
 
   history: Array<{
     status: OrderStatus;
@@ -81,6 +82,7 @@ const orderSchema = new Schema<IOrder>(
     postponedDate: { type: Date },
     deliveryNotificationSent: { type: Boolean, default: false },
     paymentReceived: { type: Number, default: 0 },
+    notes: { type: String },
     history: [
       {
         status: String,
