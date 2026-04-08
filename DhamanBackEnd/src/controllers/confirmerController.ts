@@ -132,8 +132,6 @@ export const handleNoAnswer = async (req: Request, res: Response) => {
   }
 };
 
-
-
 export const confirmOrder = async (req: Request, res: Response) => {
   const id = req.params.id as string;
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -198,8 +196,20 @@ export const handleCancelOrder = async (req: Request, res: Response) => {
           },
         },
       },
-      { returnDocument: "after", runValidators: true },
+      { returnDocument: "after", runValidators: true, new: true },
     );
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    order.paymentReceived = 0;
+    await order.save();
+    // here we have to reduce the stock of each product based on the quantity delivered
+    await Promise.all(
+      order.items.map((item) =>
+        Product.findByIdAndUpdate(item.product, {
+          $inc: { stockQuantity: +item.quantity },
+        }).exec(),
+      ),
+    );
+
     res.status(200).json({ order });
   } catch (err) {
     res.status(400).json({ message: "Update failed" });
@@ -253,7 +263,6 @@ export const handleRemoveOrder = async (req: Request, res: Response) => {
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
-   
     const products = await Product.find({}).sort({ createdAt: -1 });
     res.status(200).json({ products });
   } catch (err) {
@@ -270,13 +279,12 @@ export const getConfirmerNotifications = async (
     const notifications = await Notification.find({
       recipientId: req.user?.id,
     }).sort({ createdAt: 1 });
-    console.log("here ")
+    console.log("here ");
     res.status(200).json({ notifications });
   } catch (err) {
     res.status(400).json({ message: "failded to get notifications" });
   }
 };
-
 
 // mark notifications as read
 export const markNotificationAsRead = async (req: Request, res: Response) => {
@@ -284,7 +292,9 @@ export const markNotificationAsRead = async (req: Request, res: Response) => {
     const id = req.params.id as string;
     // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid Notification ID format" });
+      return res
+        .status(400)
+        .json({ message: "Invalid Notification ID format" });
     }
     const notification = await Notification.findByIdAndUpdate(
       id,
@@ -295,4 +305,4 @@ export const markNotificationAsRead = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(400).json({ message: "Update failed" });
   }
-}
+};
