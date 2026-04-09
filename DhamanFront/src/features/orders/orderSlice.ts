@@ -120,7 +120,7 @@ const orderSlice = createSlice({
       .addCase(handleAddOrder.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.orders.push(action.payload);
+        state.orders.unshift(action.payload);
       })
       .addCase(handleAddOrder.rejected, (state, action) => {
         state.loading = false;
