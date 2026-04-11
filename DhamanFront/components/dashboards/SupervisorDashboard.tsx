@@ -525,7 +525,7 @@ export default function SupervisorDashboard() {
               <View className="bg-white rounded-[32px] p-12 items-center border border-dashed border-slate-200">
                 <Package size={48} color="#cbd5e1" />
                 <Text className="text-slate-400 font-bold mt-4 text-center">
-                  لا توجد منتجات حالياً{products.length}
+                  لا توجد منتجات حالياً
                 </Text>
               </View>
             ) : (
