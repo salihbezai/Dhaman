@@ -18,7 +18,6 @@ export const getConfirmerOrders = async (req: Request, res: Response) => {
 
     res.status(200).json({ orders });
   } catch (err) {
-    console.error("Fetch Error:", err);
     res.status(500).json({ message: "Error fetching orders" });
   }
 };
@@ -29,8 +28,7 @@ import { Notification } from "../models/Notification";
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const { items, ...orderData } = req.body;
-    console.log("items " + JSON.stringify(items));
-    console.log("orderData " + JSON.stringify(orderData));
+   
     // 1. Map through items and fetch real details from DB
     const processedItems = await Promise.all(
       items.map(async (item: any) => {
@@ -64,7 +62,6 @@ export const createOrder = async (req: Request, res: Response) => {
     await newOrder.save();
     res.status(201).json({ newOrder });
   } catch (err: any) {
-    console.log("soemthing went wrong ? " + err);
     res.status(400).json({ message: err.message });
   }
 };
@@ -127,7 +124,6 @@ export const handleNoAnswer = async (req: Request, res: Response) => {
     await order.save();
     res.status(200).json({ order });
   } catch (err) {
-    console.log("error in handle now answe " + err);
     res.status(400).json({ message: "Update failed" });
   }
 };
@@ -220,7 +216,6 @@ export const handlePostponeOrder = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
     const { postponedDate } = req.body;
-    console.log("trying to postpone");
     // 1. Check if ID is a valid MongoDB ObjectId to avoid crash
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid Order ID format" });
@@ -279,7 +274,6 @@ export const getConfirmerNotifications = async (
     const notifications = await Notification.find({
       recipientId: req.user?.id,
     }).sort({ createdAt: 1 });
-    console.log("here ");
     res.status(200).json({ notifications });
   } catch (err) {
     res.status(400).json({ message: "failded to get notifications" });

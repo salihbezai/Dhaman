@@ -148,7 +148,6 @@ interface LoginResponse {
 
 export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body as LoginRequestBody;
-  console.log("trying to login with " + JSON.stringify(req.body));
   // validate required fields
   if (!username || !password) {
     return res.status(400).json({
@@ -226,7 +225,6 @@ export const login = async (req: Request, res: Response) => {
 
 export const refresh = async (req: Request, res: Response) => {
   try {
-    console.log("called");
     const GRACE_MS = 30 * 1000; // 30 seconds grace
     const REFRESH_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -389,7 +387,6 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     const user = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
     });
-    console.log("the udpate data " + JSON.stringify(updateData));
     if (!user) {
       return res.status(404).json({
         message: { en: "User not found.", ar: "المستخدم غير موجود." },
